@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -45,13 +47,27 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Atkinson Hyperlegible', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply text-[hsl(var(--heading))];
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-weight: 700;
   }
 
   p {
     @apply text-[hsl(var(--text))];
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+  }
+
+  .brand-name {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-transform: lowercase;
+    background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 }
