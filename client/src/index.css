@@ -21,24 +21,28 @@
   }
 
   .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 100%;
+    --background: 215 28% 17%;
+    --foreground: 210 20% 98%;
     --primary: 174 34% 58%;
     --primary-foreground: 0 0% 100%;
     --accent: 15 100% 50%;
     --accent-foreground: 0 0% 100%;
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 100%;
+    --muted: 215 27% 27%;
+    --muted-foreground: 210 20% 98%;
     --border: 174 34% 58%;
-    --input: 0 0% 20%;
+    --input: 215 27% 27%;
     --ring: 174 34% 58%;
     --shadow: 215 25% 27%;
   }
 }
 
 @layer base {
+  * {
+    @apply border-border;
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased min-h-screen;
     font-family: 'Atkinson Hyperlegible', sans-serif;
   }
 
@@ -65,24 +69,24 @@
            transition-all duration-200;
   }
 
-  /* Product cards without shadow */
+  /* Product cards */
   .product-card {
-    @apply bg-white transition-all duration-200;
+    @apply bg-background border-[4px] border-[hsl(var(--primary))] transition-all duration-200;
   }
 
-  /* Feature cards without shadow */
+  /* Feature cards */
   .feature-card {
-    @apply bg-white p-6 text-left transition-all duration-200;
+    @apply bg-background border-[4px] border-[hsl(var(--primary))] p-6 text-left transition-all duration-200;
   }
 
   /* Feature description cards */
   .feature-description {
-    @apply bg-white p-6 rounded-none border-none transition-all duration-200;
+    @apply bg-background p-6 rounded-none border-[4px] border-[hsl(var(--primary))] transition-all duration-200;
   }
 
   /* Form elements */
   .form-input {
-    @apply bg-white border-[4px] border-[hsl(var(--primary))]
+    @apply bg-background border-[4px] border-[hsl(var(--primary))]
            focus:outline-none focus:ring-0
            transition-all duration-200;
   }
@@ -90,11 +94,11 @@
   /* Tables */
   .table-neo th,
   .table-neo td {
-    @apply p-4;
+    @apply p-4 border-[4px] border-[hsl(var(--primary))];
   }
 
   /* Alert/notification styles */
   .alert-neo {
-    @apply p-4 bg-white;
+    @apply p-4 bg-background border-[4px] border-[hsl(var(--primary))];
   }
 }
