@@ -20,10 +20,10 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
       id: 1,
-      name: "PressureRelief Pro",
-      price: 149.99,
+      name: "RestEaze Restless Leg Relief Band",
+      price: 19.99,
       quantity: 1,
-      image: "https://images.unsplash.com/photo-1599557835468-29bb0b3155cd"
+      image: "/uploads/product/main.jpg"
     }
   ]);
 

@@ -1,14 +1,14 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Package } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
   return (
     <nav className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <a className="text-2xl font-bold text-primary">SoleCalm™</a>
+          <a className="text-2xl font-bold text-primary">RestEaze</a>
         </Link>
 
         <div className="flex items-center gap-4">
