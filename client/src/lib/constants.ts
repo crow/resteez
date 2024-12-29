@@ -9,7 +9,7 @@ export const PRODUCT_DATA = {
     "multi-use design: can be worn on one or both feet depending on your level of discomfort"
   ],
   images: [
-    "/uploads/product/main.jpg",
+    "/attached_assets/image_1735505304959.png",
     "/uploads/product/size.jpg",
     "/uploads/product/instructions.jpg"
   ],
