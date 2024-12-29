@@ -8,8 +8,28 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const db = drizzle({
+// Enhanced error handling for database connection
+const dbConnection = {
   connection: process.env.DATABASE_URL,
   schema,
   ws: ws,
-});
+  connectionOptions: {
+    max_retries: 5,
+    retry_interval: 1000,
+  }
+};
+
+export const db = drizzle(dbConnection);
+
+// Add connection status check
+export const checkConnection = async () => {
+  try {
+    // Simple query to test connection
+    await db.execute(sql`SELECT 1`);
+    console.log('Database connection successful');
+    return true;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    return false;
+  }
+};

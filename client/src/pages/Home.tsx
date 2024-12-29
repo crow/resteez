@@ -14,7 +14,8 @@ export default function Home() {
             Find Relief from Restless Leg Syndrome
           </h1>
           <p className="text-lg text-neutral-700 dark:text-neutral-300">
-            Experience breakthrough comfort with our innovative pressure therapy device.
+            Experience breakthrough comfort with our innovative pressure therapy
+            device.
           </p>
         </div>
       </section>
@@ -53,7 +54,10 @@ export default function Home() {
               <CardContent className="p-6 space-y-4">
                 <div className="flex gap-1">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                    <Star
+                      key={i}
+                      className="h-5 w-5 fill-yellow-400 text-yellow-400"
+                    />
                   ))}
                 </div>
                 <p className="italic">{testimonial.text}</p>
