@@ -33,9 +33,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden">
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="relative aspect-square">
+    <div className="product-card overflow-hidden bg-white">
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="relative aspect-square border-r-[6px] border-black">
           <img
             src={product.images[0]}
             alt={product.name}
@@ -43,44 +43,38 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
 
-        <div className="p-6 space-y-6">
-          <CardHeader className="p-0">
-            <CardTitle className="text-3xl">{product.name}</CardTitle>
-            <CardDescription className="text-lg mt-2">
-              {product.description}
-            </CardDescription>
-          </CardHeader>
+        <div className="p-8 space-y-8">
+          <div>
+            <h2 className="text-4xl font-bold mb-4">{product.name}</h2>
+            <p className="text-xl">{product.description}</p>
+          </div>
 
-          <CardContent className="p-0">
-            <div className="space-y-4">
-              <div className="text-2xl font-bold">
-                ${product.price.toFixed(2)}
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Key Features:</h3>
-                <ul className="list-disc list-inside space-y-1">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="text-muted-foreground">
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="space-y-6">
+            <div className="text-3xl font-bold color-block bg-primary text-white inline-block px-4 py-2">
+              ${product.price.toFixed(2)}
             </div>
-          </CardContent>
 
-          <CardFooter className="p-0">
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={addToCart}
-            >
-              Add to Cart
-            </Button>
-          </CardFooter>
+            <div className="space-y-4">
+              <h3 className="text-2xl font-bold">features:</h3>
+              <ul className="space-y-3">
+                {product.features.map((feature, index) => (
+                  <li key={index} className="flex gap-2 items-start">
+                    <span className="text-xl">→</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <Button
+            className="button-neo w-full text-xl py-8"
+            onClick={addToCart}
+          >
+            add to cart
+          </Button>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
