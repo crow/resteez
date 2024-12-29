@@ -8,12 +8,12 @@ export default function Navbar() {
     <nav className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <a className="text-2xl font-bold text-primary">PressureRelief</a>
+          <a className="text-2xl font-bold text-primary">SoleCalm™</a>
         </Link>
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          
+
           <Link href="/cart">
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
