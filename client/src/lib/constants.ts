@@ -1,13 +1,12 @@
 export const PRODUCT_DATA = {
-  name: "PressureRelief Pro",
-  description: "Innovative medical device designed to alleviate restless leg syndrome through targeted arch pressure therapy.",
-  price: 149.99,
+  name: "SoleCalm™ Restless Leg Relief Band",
+  description: "Say goodbye to sleepless nights with SoleCalm™, the simple yet effective solution for Restless Legs Syndrome (RLS) sufferers. Designed to apply targeted, consistent pressure to the arch of your foot, SoleCalm™ mimics the soothing relief discovered by RLS sufferers in their own homes.",
+  price: 19.99,
   features: [
-    "Ergonomic design for maximum comfort",
-    "Adjustable pressure settings",
-    "Medical-grade materials",
-    "Portable and lightweight",
-    "Clinically tested"
+    "Comfortable Targeted Pressure: A soft, adjustable band with a cushioned pressure pad that fits snugly under the arch of your foot",
+    "Customizable Fit: Adjustable straps ensure a secure, personalized fit for all foot sizes",
+    "Portable Relief: Lightweight and easy to wear at home or on the go—ideal for walking or lying down",
+    "Multi-Use Design: Can be worn on one or both feet depending on your level of discomfort"
   ],
   images: [
     "https://images.unsplash.com/photo-1638859460750-181fcc7936a6",
