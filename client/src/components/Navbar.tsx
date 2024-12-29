@@ -5,7 +5,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
   return (
-    <nav className="bg-white shadow-[0_4px_0_0_hsl(var(--primary))]">
+    <nav className="bg-white">
       <div className="container mx-auto px-8 h-20 flex items-center justify-between">
         <Link href="/">
           <a className="brand-name text-3xl hover:skew-x-2 transition-transform">resteez</a>
