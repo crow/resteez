@@ -16,17 +16,8 @@ export default function Home() {
           <p className="text-lg text-muted-foreground">
             Experience breakthrough comfort with our innovative pressure therapy device.
           </p>
-          <Button size="lg" className="bg-primary hover:bg-primary/90">
-            Shop Now
-          </Button>
         </div>
-        {/* <div className="flex-1">
-          <img 
-            src={STOCK_PHOTOS.medical[0]} 
-            alt="Medical Device"
-            className="rounded-lg shadow-lg"
-          />
-        </div> */}
+        {}
       </section>
 
       {/* Product Section */}
