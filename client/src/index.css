@@ -14,7 +14,7 @@
     --accent-foreground: 0 0% 100%;
     --muted: 220 13% 91%;
     --muted-foreground: 215 25% 27%;
-    --border: 0 0% 0%;
+    --border: 189 42% 29%;
     --input: 220 13% 91%;
     --ring: 189 42% 29%;
 
@@ -31,7 +31,7 @@
     --accent-foreground: 0 0% 100%;
     --muted: 0 0% 20%;
     --muted-foreground: 0 0% 100%;
-    --border: 0 0% 100%;
+    --border: 174 34% 58%;
     --input: 0 0% 20%;
     --ring: 174 34% 58%;
 
@@ -76,7 +76,7 @@
 @layer components {
   /* Base button style */
   .btn {
-    @apply px-6 py-3 text-lg font-bold border-[4px] border-black 
+    @apply px-6 py-3 text-lg font-bold border-[4px] border-[hsl(var(--primary))]
            shadow-[4px_4px_0_0_hsl(var(--primary))] hover:shadow-none 
            hover:translate-x-1 hover:translate-y-1 
            transition-all duration-200;
@@ -84,8 +84,7 @@
 
   /* Card components */
   .card {
-    @apply bg-white border-[4px] border-black 
-           shadow-[8px_8px_0_0_hsl(var(--primary))]
+    @apply bg-white shadow-[8px_8px_0_0_hsl(var(--primary))]
            hover:shadow-[12px_12px_0_0_hsl(var(--primary))]
            hover:-translate-x-1 hover:-translate-y-1
            transition-all duration-200;
@@ -93,26 +92,19 @@
 
   /* Form inputs */
   .input {
-    @apply border-[4px] border-black bg-white
+    @apply bg-white border-[4px] border-[hsl(var(--primary))]
            shadow-[4px_4px_0_0_hsl(var(--primary))]
            focus:shadow-[6px_6px_0_0_hsl(var(--primary))]
            focus:translate-x-[-1px] focus:translate-y-[-1px]
-           focus:outline-none focus:ring-0 focus:border-black
-           transition-all duration-200;
-  }
-
-  /* Navigation */
-  .nav-link {
-    @apply relative border-[4px] border-transparent 
-           hover:border-black hover:bg-primary hover:text-white
+           focus:outline-none focus:ring-0
            transition-all duration-200;
   }
 
   /* Primary button with neo-brutalist style */
   .button-neo {
-    @apply bg-primary text-white border-[4px] border-black 
-           shadow-[6px_6px_0_0_hsl(var(--accent))]
-           hover:shadow-[8px_8px_0_0_hsl(var(--accent))]
+    @apply bg-primary text-white border-[4px] border-[hsl(var(--primary))]
+           shadow-[6px_6px_0_0_hsl(var(--primary))]
+           hover:shadow-[8px_8px_0_0_hsl(var(--primary))]
            hover:translate-x-[-2px] hover:translate-y-[-2px]
            active:shadow-none
            active:translate-x-[1px] active:translate-y-[1px]
@@ -121,8 +113,7 @@
 
   /* Product cards with extreme neo-brutalist style */
   .product-card {
-    @apply bg-white border-[4px] border-black 
-           shadow-[8px_8px_0_0_hsl(var(--primary))]
+    @apply bg-white shadow-[8px_8px_0_0_hsl(var(--primary))]
            hover:shadow-[12px_12px_0_0_hsl(var(--primary))]
            hover:translate-x-[-2px] hover:translate-y-[-2px]
            transition-all duration-200;
@@ -130,7 +121,7 @@
 
   /* Form elements with dramatic styling */
   .form-input {
-    @apply border-[4px] border-black bg-white
+    @apply bg-white border-[4px] border-[hsl(var(--primary))]
            shadow-[6px_6px_0_0_hsl(var(--primary))]
            focus:shadow-[8px_8px_0_0_hsl(var(--primary))]
            focus:translate-x-[-1px] focus:translate-y-[-1px]
@@ -140,30 +131,23 @@
 
   /* Section headers */
   .section-header {
-    @apply text-4xl font-bold border-b-[4px] border-black 
-           pb-4 mb-8;
+    @apply text-4xl font-bold pb-4 mb-8 shadow-[0_4px_0_0_hsl(var(--primary))];
   }
 
   /* Color blocks */
   .color-block {
-    @apply border-[4px] border-black p-6 
-           shadow-[6px_6px_0_0_hsl(var(--accent))];
+    @apply shadow-[6px_6px_0_0_hsl(var(--primary))];
   }
 
   /* Tables */
-  .table-neo {
-    @apply border-[4px] border-black;
-  }
-
   .table-neo th,
   .table-neo td {
-    @apply border-[3px] border-black p-4;
+    @apply p-4 shadow-[2px_2px_0_0_hsl(var(--primary))];
   }
 
   /* Alert/notification styles */
   .alert-neo {
-    @apply border-[4px] border-black p-4 
-           shadow-[6px_6px_0_0_hsl(var(--primary))]
+    @apply p-4 shadow-[6px_6px_0_0_hsl(var(--primary))]
            bg-white;
   }
 }
