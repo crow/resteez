@@ -20,13 +20,13 @@ export default function Home() {
             Shop Now
           </Button>
         </div>
-        <div className="flex-1">
+        {/* <div className="flex-1">
           <img 
             src={STOCK_PHOTOS.medical[0]} 
             alt="Medical Device"
             className="rounded-lg shadow-lg"
           />
-        </div>
+        </div> */}
       </section>
 
       {/* Product Section */}
