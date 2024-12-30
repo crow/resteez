@@ -5,6 +5,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PRODUCT_DATA } from "@/lib/constants";
+import { useMutation } from "@tanstack/react-query";
 
 interface CartItem {
   id: number;
@@ -20,10 +22,10 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
       id: 1,
-      name: "RestEaze Restless Leg Relief Band",
-      price: 19.99,
+      name: PRODUCT_DATA.name,
+      price: PRODUCT_DATA.price,
       quantity: 1,
-      image: "/uploads/product/main.jpg"
+      image: PRODUCT_DATA.images[0]
     }
   ]);
 
@@ -50,6 +52,54 @@ export default function Cart() {
     0
   );
 
+  const createOrder = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          items: cartItems.map(item => ({
+            productId: item.id,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          customerEmail: "customer@example.com", // This would come from auth in a real app
+          shippingAddress: {
+            name: "Customer Name",
+            street1: "123 Main St",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94111",
+            country: "US"
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      const data = await response.json();
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Order created",
+        description: "Your order has been placed successfully."
+      });
+      setLocation("/checkout?orderId=" + data.orderId);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create order. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const proceedToCheckout = () => {
     if (cartItems.length === 0) {
       toast({
@@ -59,7 +109,7 @@ export default function Cart() {
       });
       return;
     }
-    setLocation("/checkout");
+    createOrder.mutate();
   };
 
   return (
@@ -73,7 +123,7 @@ export default function Cart() {
               <img
                 src={item.image}
                 alt={item.name}
-                className="w-24 h-24 object-cover rounded"
+                className="w-24 h-24 object-contain rounded"
               />
               <div className="flex-1">
                 <h3 className="font-semibold">{item.name}</h3>
@@ -127,9 +177,9 @@ export default function Cart() {
             className="w-full"
             size="lg"
             onClick={proceedToCheckout}
-            disabled={cartItems.length === 0}
+            disabled={cartItems.length === 0 || createOrder.isPending}
           >
-            Proceed to Checkout
+            {createOrder.isPending ? "Processing..." : "Proceed to Checkout"}
           </Button>
         </CardFooter>
       </Card>

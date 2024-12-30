@@ -25,7 +25,7 @@ export async function createPaymentIntent(data: PaymentIntentRequest) {
           quantity: 1,
           price: data.amount / 100
         }],
-        customerEmail: "customer@example.com",
+        customerEmail: data.shipping.name,
         shippingAddress: data.shipping.address
       }),
     });

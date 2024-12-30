@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,6 +28,7 @@ const checkoutSchema = z.object({
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
+  const [search] = useSearch();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -46,10 +47,15 @@ export default function Checkout() {
   const onSubmit = async (values: z.infer<typeof checkoutSchema>) => {
     try {
       setIsProcessing(true);
-      
+
+      const orderId = new URLSearchParams(search).get('orderId');
+      if (!orderId) {
+        throw new Error('No order ID found');
+      }
+
       // Create payment intent
       const { clientSecret } = await createPaymentIntent({
-        amount: 14999, // $149.99
+        amount: 1999, // $19.99
         currency: "usd",
         shipping: {
           name: values.name,
@@ -62,13 +68,14 @@ export default function Checkout() {
         },
       });
 
-      // Redirect to success page or show error
+      // Redirect to success page only after payment intent is created
       if (clientSecret) {
         toast({
           title: "Order placed successfully!",
           description: "You will receive a confirmation email shortly.",
         });
-        setLocation("/");
+        // Keep the user on checkout page until payment is processed
+        setIsProcessing(false);
       }
     } catch (error) {
       toast({
@@ -76,7 +83,6 @@ export default function Checkout() {
         description: "Please try again or contact support.",
         variant: "destructive",
       });
-    } finally {
       setIsProcessing(false);
     }
   };
