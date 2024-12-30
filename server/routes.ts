@@ -52,6 +52,20 @@ export function registerRoutes(app: Express): Server {
   app.use('/uploads', express.static('uploads'));
   app.use('/attached_assets', express.static('attached_assets'));
 
+  // Add a test endpoint to get the hosted URL
+  app.get("/api/get-hosted-url", (req, res) => {
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const baseUrl = `${protocol}://${host}`;
+    const webhookUrl = `${baseUrl}/api/webhooks/stripe`;
+    console.log('Request headers:', req.headers);
+    console.log('Generated URLs:', { baseUrl, webhookUrl });
+    res.json({ 
+      baseUrl,
+      webhookUrl
+    });
+  });
+
   // Products routes
   app.get("/api/products", async (req, res, next) => {
     try {
@@ -135,7 +149,7 @@ export function registerRoutes(app: Express): Server {
         cancel_url: `${req.protocol}://${req.get('host')}/cart`,
       });
 
-      res.json({ 
+      res.json({
         sessionId: session.id,
         orderId: order.id
       });
@@ -173,6 +187,51 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       next(error);
     }
+  });
+
+  // Webhook handler for Stripe events
+  app.post("/api/webhooks/stripe", express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig || '',
+        process.env.STRIPE_WEBHOOK_SECRET || ''
+      );
+    } catch (err) {
+      console.error('Webhook signature verification failed');
+      return res.status(400).send('Webhook signature verification failed');
+    }
+
+    // Handle checkout.session.completed
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+
+      try {
+        // Update order status and add shipping details
+        const orderId = session.metadata?.orderId;
+        if (!orderId) {
+          throw new Error('No order ID in metadata');
+        }
+
+        await db.update(orders)
+          .set({
+            status: 'confirmed',
+            customerEmail: session.customer_details?.email,
+            shippingAddress: session.shipping_details
+          })
+          .where(eq(orders.id, parseInt(orderId)));
+
+        console.log(`Order ${orderId} confirmed via webhook`);
+      } catch (error) {
+        console.error('Error processing webhook:', error);
+        return res.status(500).send('Error processing webhook');
+      }
+    }
+
+    res.json({ received: true });
   });
 
   // Register error handling middleware last
