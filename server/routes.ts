@@ -109,26 +109,26 @@ export function registerRoutes(app: Express): Server {
         })
       ));
 
+      // Get the base URL for the application
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
       // Create Stripe checkout session
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
+        mode: 'payment',
         line_items: items.map((item: any) => ({
           price_data: {
             currency: 'usd',
             product_data: {
               name: item.name,
-              images: [
-                // Ensure image URLs are absolute
-                `${req.protocol}://${req.get('host')}${item.image}`
-              ],
+              images: [item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`],
             },
             unit_amount: Math.round(item.price * 100), // Convert to cents
           },
           quantity: item.quantity,
         })),
-        mode: 'payment',
-        success_url: `${req.protocol}://${req.get('host')}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
-        cancel_url: `${req.protocol}://${req.get('host')}/cart`,
+        success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
+        cancel_url: `${baseUrl}/cart`,
         shipping_address_collection: {
           allowed_countries: ['US'],
         },

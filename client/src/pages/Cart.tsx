@@ -7,7 +7,6 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PRODUCT_DATA } from "@/lib/constants";
 import { useMutation } from "@tanstack/react-query";
-import { redirectToCheckout } from "@/lib/stripe";
 
 interface CartItem {
   id: number;
@@ -55,35 +54,40 @@ export default function Cart() {
 
   const checkout = useMutation({
     mutationFn: async () => {
-      // Create order and get checkout session
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          items: cartItems.map(item => ({
-            id: item.id,
-            quantity: item.quantity,
-            price: item.price,
-            name: item.name,
-            image: item.image
-          }))
-        })
-      });
+      try {
+        // Create order and get checkout session
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            items: cartItems.map(item => ({
+              id: item.id,
+              quantity: item.quantity,
+              price: item.price,
+              name: item.name,
+              image: item.image
+            }))
+          })
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create order");
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Failed to create order");
+        }
+
+        const data = await response.json();
+        if (!data.sessionId) {
+          throw new Error("No session ID returned from server");
+        }
+
+        // Redirect to Stripe checkout
+        window.location.href = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
+      } catch (error) {
+        console.error('Checkout error:', error);
+        throw error;
       }
-
-      const { sessionId } = await response.json();
-      if (!sessionId) {
-        throw new Error("No session ID returned from server");
-      }
-
-      // Redirect to Stripe checkout
-      await redirectToCheckout(sessionId);
     },
     onError: (error) => {
       console.error('Checkout error:', error);
