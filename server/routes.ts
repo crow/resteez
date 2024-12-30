@@ -103,15 +103,14 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: 'Image is required' });
       }
 
-      const newProduct = {
+      const [product] = await db.insert(products).values({
         name,
         description,
         price: parseFloat(price),
         inventory: parseInt(inventory),
         image: imageUrl
-      };
+      }).returning();
 
-      const [product] = await db.insert(products).values(newProduct).returning();
       console.log('Product created:', product);
       res.json(product);
     } catch (error) {
@@ -126,7 +125,7 @@ export function registerRoutes(app: Express): Server {
       const { items, customerEmail, shippingAddress } = req.body;
 
       // Calculate total
-      const total = items.reduce((acc: number, item: any) => 
+      const total = items.reduce((acc: number, item: any) =>
         acc + (item.price * item.quantity), 0);
 
       // Create order
@@ -141,45 +140,30 @@ export function registerRoutes(app: Express): Server {
 
       // Create order items
       const orderItemsPromises = items.map(async (item: any) => {
-        const product = await db.query.products.findFirst({
-          where: eq(products.id, item.productId)
-        });
-
-        if (!product) {
-          throw new Error(`Product with id ${item.productId} not found`);
-        }
-
         return db.insert(orderItems).values({
           orderId: order.id,
           productId: item.productId,
           quantity: item.quantity,
-          price: product.price
+          price: item.price
         });
       });
 
       await Promise.all(orderItemsPromises);
 
-      // Create Stripe payment intent
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(total * 100),
-        currency: 'usd',
-        metadata: { orderId: order.id }
-      });
-
       res.json({
         orderId: order.id,
-        clientSecret: paymentIntent.client_secret
       });
     } catch (error) {
       next(error);
     }
   });
 
-  // Order fulfillment routes
-  app.post("/api/orders/:orderId/fulfill", async (req, res, next) => {
+  // Finalize order
+  app.post("/api/orders/:orderId/finalize", async (req, res, next) => {
     try {
-      console.log('Fulfilling order:', req.params.orderId);
       const { orderId } = req.params;
+      const { customerEmail, shippingAddress } = req.body;
+
       const order = await db.query.orders.findFirst({
         where: eq(orders.id, parseInt(orderId))
       });
@@ -188,9 +172,18 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ error: 'Order not found' });
       }
 
+      // Update order with customer info
+      await db.update(orders)
+        .set({
+          customerEmail,
+          shippingAddress,
+          status: 'confirmed'
+        })
+        .where(eq(orders.id, parseInt(orderId)));
+
       // Create shipping label
       const shipment = await easypost.Shipment.create({
-        to_address: order.shippingAddress,
+        to_address: shippingAddress,
         from_address: {
           company: 'Medical Devices Co',
           street1: '123 Shipper St',
@@ -220,7 +213,6 @@ export function registerRoutes(app: Express): Server {
         })
         .where(eq(orders.id, parseInt(orderId)));
 
-      console.log('Order fulfilled:', orderId);
       res.json({ success: true });
     } catch (error) {
       next(error);

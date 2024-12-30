@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { createPaymentIntent } from "@/lib/stripe";
+import { useMutation } from "@tanstack/react-query";
 
 const checkoutSchema = z.object({
   email: z.string().email(),
@@ -44,47 +44,55 @@ export default function Checkout() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof checkoutSchema>) => {
-    try {
-      setIsProcessing(true);
-
+  const placeOrder = useMutation({
+    mutationFn: async (data: z.infer<typeof checkoutSchema>) => {
       const orderId = new URLSearchParams(search).get('orderId');
       if (!orderId) {
         throw new Error('No order ID found');
       }
 
-      // Create payment intent
-      const { clientSecret } = await createPaymentIntent({
-        amount: 1999, // $19.99
-        currency: "usd",
-        shipping: {
-          name: values.name,
-          address: {
-            line1: values.address,
-            city: values.city,
-            state: values.state,
-            postal_code: values.zipCode,
-          },
+      const response = await fetch(`/api/orders/${orderId}/finalize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          customerEmail: data.email,
+          shippingAddress: {
+            name: data.name,
+            street1: data.address,
+            city: data.city,
+            state: data.state,
+            zip: data.zipCode,
+            country: "US",
+          },
+        }),
       });
 
-      // Redirect to success page only after payment intent is created
-      if (clientSecret) {
-        toast({
-          title: "Order placed successfully!",
-          description: "You will receive a confirmation email shortly.",
-        });
-        // Keep the user on checkout page until payment is processed
-        setIsProcessing(false);
+      if (!response.ok) {
+        throw new Error('Failed to place order');
       }
-    } catch (error) {
+
+      return response.json();
+    },
+    onSuccess: (data) => {
       toast({
-        title: "Error processing payment",
-        description: "Please try again or contact support.",
+        title: "Order placed successfully!",
+        description: "You will receive a confirmation email shortly.",
+      });
+      setLocation("/");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error placing order",
+        description: error instanceof Error ? error.message : "Please try again or contact support.",
         variant: "destructive",
       });
-      setIsProcessing(false);
-    }
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof checkoutSchema>) => {
+    placeOrder.mutate(values);
   };
 
   return (
@@ -186,9 +194,9 @@ export default function Checkout() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isProcessing}
+                disabled={placeOrder.isPending}
               >
-                {isProcessing ? "Processing..." : "Place Order"}
+                {placeOrder.isPending ? "Processing..." : "Place Order"}
               </Button>
             </CardFooter>
           </form>
