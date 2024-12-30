@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { PRODUCT_DATA } from "@/lib/constants";
 import { useMutation } from "@tanstack/react-query";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { redirectToCheckout } from "@/lib/stripe";
 
 interface CartItem {
   id: number;
@@ -82,11 +81,12 @@ export default function Cart() {
         }
 
         const data = await response.json();
-        if (!data.sessionId) {
-          throw new Error("No session ID returned from server");
+        if (!data.url) {
+          throw new Error("No checkout URL returned from server");
         }
 
-        await redirectToCheckout(data.sessionId);
+        // Directly redirect to the Stripe URL
+        window.location.href = data.url;
       } catch (error) {
         setIsRedirecting(false);
         console.error('Checkout error:', error);
