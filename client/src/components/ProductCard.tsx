@@ -31,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <img
             src={product.images[0]}
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-contain"
           />
         </div>
 
