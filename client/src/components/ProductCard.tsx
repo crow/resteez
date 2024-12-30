@@ -27,11 +27,11 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="product-card overflow-hidden">
       <div className="grid md:grid-cols-2 gap-8">
-        <div className="relative aspect-square">
+        <div className="relative aspect-square border-r-[6px] border-[hsl(var(--primary))]">
           <img
             src={product.images[0]}
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-contain p-4"
+            className="absolute inset-0 w-full h-full object-contain"
           />
         </div>
 
