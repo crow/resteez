@@ -81,13 +81,25 @@ export default function Cart() {
         }
 
         const data = await response.json();
-
         if (!data.url) {
           throw new Error("No checkout URL returned from server");
         }
 
+        // Set a timeout to clear the loading state if redirect fails
+        const redirectTimeout = setTimeout(() => {
+          setIsRedirecting(false);
+          toast({
+            title: "Checkout failed",
+            description: "Failed to redirect to checkout page. Please try again.",
+            variant: "destructive"
+          });
+        }, 5000);
+
         // Redirect to Stripe's hosted checkout page
-        window.location.href = data.url;
+        window.location.assign(data.url);
+
+        // Clear timeout if component unmounts
+        return () => clearTimeout(redirectTimeout);
       } catch (error) {
         setIsRedirecting(false);
         console.error('Checkout error:', error);
