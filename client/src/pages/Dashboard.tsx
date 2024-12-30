@@ -104,34 +104,15 @@ export default function Dashboard() {
     },
   });
 
-  const fulfillOrder = async (orderId: number) => {
-    try {
-      const response = await fetch(`/api/orders/${orderId}/fulfill`, {
-        method: "POST",
-      });
-
-      if (!response.ok) throw new Error("Failed to fulfill order");
-
-      toast({
-        title: "Order fulfilled",
-        description: "Shipping label has been generated.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fulfill order. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const onSubmit = (values: z.infer<typeof productSchema>) => {
     const formData = new FormData();
     formData.append("name", values.name);
     formData.append("description", values.description);
     formData.append("price", values.price);
     formData.append("inventory", values.inventory);
-    formData.append("image", values.image[0]);
+    if (values.image instanceof FileList && values.image.length > 0) {
+      formData.append("image", values.image[0]);
+    }
 
     createProduct.mutate(formData);
   };
@@ -217,15 +198,15 @@ export default function Dashboard() {
                 <FormField
                   control={form.control}
                   name="image"
-                  render={({ field: { onChange, ...field } }) => (
+                  render={({ field: { onChange, value, ...field } }) => (
                     <FormItem>
                       <FormLabel>Product Image</FormLabel>
                       <FormControl>
                         <Input
-                          {...field}
                           type="file"
                           accept="image/*"
                           onChange={(e) => onChange(e.target.files)}
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -294,7 +275,7 @@ export default function Dashboard() {
                     />
                   </TableCell>
                   <TableCell>{product.name}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>${Number(product.price).toFixed(2)}</TableCell>
                   <TableCell>{product.inventory}</TableCell>
                 </TableRow>
               ))}
@@ -334,7 +315,7 @@ export default function Dashboard() {
                       {order.status}
                     </span>
                   </TableCell>
-                  <TableCell>${order.total.toFixed(2)}</TableCell>
+                  <TableCell>${Number(order.total).toFixed(2)}</TableCell>
                   <TableCell>
                     {new Date(order.createdAt).toLocaleDateString()}
                   </TableCell>
