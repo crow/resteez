@@ -67,12 +67,20 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           </div>
 
-          <Button
-            className="button-neo w-full text-xl py-8"
-            onClick={addToCart}
-          >
-            Add to Cart
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              className="button-neo flex-1 text-xl py-8"
+              onClick={() => setLocation("/learn-more")}
+            >
+              Learn More
+            </Button>
+            <Button
+              className="button-neo flex-1 text-xl py-8"
+              onClick={addToCart}
+            >
+              Buy Now
+            </Button>
+          </div>
         </div>
       </div>
     </div>

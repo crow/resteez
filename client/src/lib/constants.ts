@@ -5,11 +5,10 @@ export const PRODUCT_DATA = {
   features: [
     "Comfortable targeted pressure: A soft, adjustable band with a cushioned pressure pad that fits snugly under the arch of your foot",
     "Customizable fit: Adjustable straps ensure a secure, personalized fit for all foot sizes",
-    "Portable relief: Lightweight and easy to wear at home or on the go—ideal for walking or lying down",
-    "Multi-use design: Can be worn on one or both feet depending on your level of discomfort"
+    "Portable relief: Lightweight and easy to wear at home or on the go—ideal for walking or lying down"
   ],
   images: [
-    "/attached_assets/image_1735505970123.png",
+    "/attached_assets/resteez.jpg",
     "/attached_assets/image_1735506036548.png",
     "/attached_assets/image_1735506140564.png"
   ],
@@ -29,7 +28,7 @@ export const PRODUCT_DATA = {
 
 export const STOCK_PHOTOS = {
   medical: [
-    "/attached_assets/image_1735505970123.png",
+    "/attached_assets/resteez.jpg",
     "/attached_assets/image_1735505993993.png"
   ]
 };
