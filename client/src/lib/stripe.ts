@@ -2,22 +2,31 @@ declare const Stripe: any; // Stripe.js is loaded in index.html
 
 let stripePromise: Promise<any> | null = null;
 
-export async function loadStripe() {
+export async function getStripe() {
   if (!stripePromise) {
-    stripePromise = Stripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+    const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    if (!key) {
+      throw new Error('Stripe publishable key is not set');
+    }
+    stripePromise = Stripe(key);
   }
   return stripePromise;
 }
 
 export async function redirectToCheckout(sessionId: string) {
-  const stripe = await loadStripe();
-  if (!stripe) {
-    throw new Error('Stripe failed to load');
-  }
+  try {
+    const stripe = await getStripe();
+    const { error } = await stripe.redirectToCheckout({
+      sessionId,
+    });
 
-  const { error } = await stripe.redirectToCheckout({ sessionId });
-  if (error) {
-    throw error;
+    if (error) {
+      console.error('Stripe redirect error:', error);
+      throw error;
+    }
+  } catch (err) {
+    console.error('Stripe checkout error:', err);
+    throw new Error(err instanceof Error ? err.message : 'Failed to redirect to checkout');
   }
 }
 
@@ -43,13 +52,15 @@ export async function createPaymentIntent(data: PaymentIntentRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        items: [{
-          productId: 1,
-          quantity: 1,
-          price: data.amount / 100
-        }],
+        items: [
+          {
+            productId: 1,
+            quantity: 1,
+            price: data.amount / 100,
+          },
+        ],
         customerEmail: data.shipping.name,
-        shippingAddress: data.shipping.address
+        shippingAddress: data.shipping.address,
       }),
     });
 

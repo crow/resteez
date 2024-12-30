@@ -73,15 +73,20 @@ export default function Cart() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create order");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create order");
       }
 
       const { sessionId } = await response.json();
+      if (!sessionId) {
+        throw new Error("No session ID returned from server");
+      }
 
       // Redirect to Stripe checkout
       await redirectToCheckout(sessionId);
     },
     onError: (error) => {
+      console.error('Checkout error:', error);
       toast({
         title: "Checkout failed",
         description: error instanceof Error ? error.message : "Please try again.",
@@ -94,73 +99,83 @@ export default function Cart() {
     <div className="max-w-4xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold">Shopping Cart</h1>
 
-      <div className="space-y-4">
-        {cartItems.map((item) => (
-          <Card key={item.id}>
-            <CardContent className="flex items-center gap-4 p-4">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-24 h-24 object-contain rounded"
-              />
-              <div className="flex-1">
-                <h3 className="font-semibold">{item.name}</h3>
-                <p className="text-muted-foreground">
-                  ${item.price.toFixed(2)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => updateQuantity(item.id, -1)}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={item.quantity}
-                  className="w-16 text-center"
-                  readOnly
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => updateQuantity(item.id, 1)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => removeItem(item.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+      {cartItems.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-muted-foreground">Your cart is empty</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="space-y-4">
+            {cartItems.map((item) => (
+              <Card key={item.id}>
+                <CardContent className="flex items-center gap-4 p-4">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-24 h-24 object-contain rounded"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{item.name}</h3>
+                    <p className="text-muted-foreground">
+                      ${item.price.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateQuantity(item.id, -1)}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      className="w-16 text-center"
+                      readOnly
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateQuantity(item.id, 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => removeItem(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Subtotal</span>
+                <span>${subtotal.toFixed(2)}</span>
               </div>
             </CardContent>
+            <CardFooter className="p-4">
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={() => checkout.mutate()}
+                disabled={cartItems.length === 0 || checkout.isPending}
+              >
+                {checkout.isPending ? "Processing..." : "Proceed to Checkout"}
+              </Button>
+            </CardFooter>
           </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex justify-between text-lg font-semibold">
-            <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
-          </div>
-        </CardContent>
-        <CardFooter className="p-4">
-          <Button
-            className="w-full"
-            size="lg"
-            onClick={() => checkout.mutate()}
-            disabled={cartItems.length === 0 || checkout.isPending}
-          >
-            {checkout.isPending ? "Processing..." : "Proceed to Checkout"}
-          </Button>
-        </CardFooter>
-      </Card>
+        </>
+      )}
     </div>
   );
 }

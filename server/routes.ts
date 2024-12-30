@@ -8,8 +8,12 @@ import multer from "multer";
 import path from "path";
 import express from "express";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia',
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY must be set');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
 });
 
 // Configure multer for image uploads
@@ -38,33 +42,10 @@ const upload = multer({
   }
 });
 
-// Error handling middleware
-const errorHandler = (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error occurred:', err);
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-};
-
 export function registerRoutes(app: Express): Server {
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
   app.use('/attached_assets', express.static('attached_assets'));
-
-  // Add a test endpoint to get the hosted URL
-  app.get("/api/get-hosted-url", (req, res) => {
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const baseUrl = `${protocol}://${host}`;
-    const webhookUrl = `${baseUrl}/api/webhooks/stripe`;
-    console.log('Request headers:', req.headers);
-    console.log('Generated URLs:', { baseUrl, webhookUrl });
-    res.json({
-      baseUrl,
-      webhookUrl
-    });
-  });
 
   // Products routes
   app.get("/api/products", async (req, res, next) => {
@@ -88,7 +69,7 @@ export function registerRoutes(app: Express): Server {
       const [product] = await db.insert(products).values({
         name,
         description,
-        price: parseFloat(price),
+        price: price.toString(),
         inventory: parseInt(inventory),
         image: imageUrl
       }).returning();
@@ -100,18 +81,22 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Create order and initiate Stripe checkout
-  app.post("/api/orders", async (req, res, next) => {
+  app.post("/api/orders", async (req, res) => {
     try {
       const { items } = req.body;
 
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ error: 'Invalid items array' });
+      }
+
       // Calculate total
-      const total = items.reduce((acc: number, item: any) =>
+      const total = items.reduce((acc: number, item: any) => 
         acc + (item.price * item.quantity), 0);
 
       // Create pending order
       const [order] = await db.insert(orders).values({
         status: 'pending',
-        total,
+        total: total.toString()
       }).returning();
 
       // Create order items
@@ -120,7 +105,7 @@ export function registerRoutes(app: Express): Server {
           orderId: order.id,
           productId: item.id,
           quantity: item.quantity,
-          price: item.price
+          price: item.price.toString()
         })
       ));
 
@@ -132,8 +117,10 @@ export function registerRoutes(app: Express): Server {
             currency: 'usd',
             product_data: {
               name: item.name,
-              // Use absolute URLs for images
-              images: [new URL(item.image, `${req.protocol}://${req.get('host')}`).toString()],
+              images: [
+                // Ensure image URLs are absolute
+                `${req.protocol}://${req.get('host')}${item.image}`
+              ],
             },
             unit_amount: Math.round(item.price * 100), // Convert to cents
           },
@@ -155,21 +142,25 @@ export function registerRoutes(app: Express): Server {
         orderId: order.id
       });
     } catch (error) {
-      next(error);
+      console.error('Checkout error:', error);
+      res.status(500).json({ 
+        error: 'Failed to create checkout session',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
-  // Check session status and update order
-  app.get("/api/orders/:orderId/check-payment", async (req, res, next) => {
+  // Check payment status
+  app.get("/api/orders/:orderId/check-payment", async (req, res) => {
     try {
       const { orderId } = req.params;
       const { sessionId } = req.query;
 
-      if (!sessionId) {
+      if (!sessionId || typeof sessionId !== 'string') {
         return res.status(400).json({ error: 'Session ID is required' });
       }
 
-      const session = await stripe.checkout.sessions.retrieve(sessionId as string);
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
 
       if (session.payment_status === 'paid') {
         // Update order status and add shipping details
@@ -186,7 +177,11 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ status: session.payment_status });
     } catch (error) {
-      next(error);
+      console.error('Payment check error:', error);
+      res.status(500).json({ 
+        error: 'Failed to check payment status',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
@@ -241,3 +236,11 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   return httpServer;
 }
+
+const errorHandler = (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error occurred:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+};
