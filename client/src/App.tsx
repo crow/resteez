@@ -5,6 +5,7 @@ import Home from "@/pages/Home";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 import Dashboard from "@/pages/Dashboard";
+import LearnMore from "@/pages/LearnMore";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <main className="container mx-auto px-4 py-8">
           <Switch>
             <Route path="/" component={Home} />
+            <Route path="/learn-more" component={LearnMore} />
             <Route path="/cart" component={Cart} />
             <Route path="/checkout" component={Checkout} />
             <Route path="/dashboard" component={Dashboard} />

@@ -78,6 +78,9 @@ export function registerRoutes(app: Express): Server {
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 
+  // Serve attached assets
+  app.use('/attached_assets', express.static('attached_assets'));
+
   // Products routes
   app.get("/api/products", async (req, res, next) => {
     try {
