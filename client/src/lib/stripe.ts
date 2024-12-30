@@ -1,4 +1,4 @@
-declare const Stripe: any; // Stripe.js is loaded in index.html
+import { loadStripe } from "@stripe/stripe-js";
 
 let stripePromise: Promise<any> | null = null;
 
@@ -8,7 +8,7 @@ export async function getStripe() {
     if (!key) {
       throw new Error('Stripe publishable key is not set');
     }
-    stripePromise = Stripe(key);
+    stripePromise = loadStripe(key);
   }
   return stripePromise;
 }
@@ -16,6 +16,10 @@ export async function getStripe() {
 export async function redirectToCheckout(sessionId: string) {
   try {
     const stripe = await getStripe();
+    if (!stripe) {
+      throw new Error('Failed to load Stripe');
+    }
+
     const { error } = await stripe.redirectToCheckout({
       sessionId,
     });
