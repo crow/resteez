@@ -78,12 +78,13 @@ export default function Cart() {
         }
 
         const data = await response.json();
-        if (!data.sessionId) {
-          throw new Error("No session ID returned from server");
+
+        if (!data.url) {
+          throw new Error("No checkout URL returned from server");
         }
 
-        // Redirect to Stripe checkout
-        window.location.href = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
+        // Redirect to Stripe's hosted checkout page
+        window.location.href = data.url;
       } catch (error) {
         console.error('Checkout error:', error);
         throw error;

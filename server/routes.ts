@@ -13,7 +13,8 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
+  apiVersion: "2023-10-16",
+  typescript: true,
 });
 
 // Configure multer for image uploads
@@ -138,6 +139,7 @@ export function registerRoutes(app: Express): Server {
       });
 
       res.json({
+        url: session.url,
         sessionId: session.id,
         orderId: order.id
       });
