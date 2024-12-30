@@ -7,6 +7,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PRODUCT_DATA } from "@/lib/constants";
 import { useMutation } from "@tanstack/react-query";
+import { redirectToCheckout } from "@/lib/stripe";
 
 interface CartItem {
   id: number;
@@ -15,8 +16,6 @@ interface CartItem {
   quantity: number;
   image: string;
 }
-
-declare const Stripe: any; // Stripe.js will be loaded in index.html
 
 export default function Cart() {
   const [, setLocation] = useLocation();
@@ -56,37 +55,36 @@ export default function Cart() {
 
   const checkout = useMutation({
     mutationFn: async () => {
-      // First create the order
-      const orderResponse = await fetch("/api/orders", {
+      // Create order and get checkout session
+      const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          items: cartItems
+          items: cartItems.map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            name: item.name,
+            image: item.image
+          }))
         })
       });
 
-      if (!orderResponse.ok) {
+      if (!response.ok) {
         throw new Error("Failed to create order");
       }
 
-      const { sessionId } = await orderResponse.json();
+      const { sessionId } = await response.json();
 
-      // Initialize Stripe and redirect to checkout
-      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
-      if (!stripe) throw new Error("Stripe failed to load");
-
-      const { error } = await stripe.redirectToCheckout({
-        sessionId
-      });
-
-      if (error) throw error;
+      // Redirect to Stripe checkout
+      await redirectToCheckout(sessionId);
     },
-    onError: () => {
+    onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to proceed to checkout. Please try again.",
+        title: "Checkout failed",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive"
       });
     }
@@ -165,12 +163,4 @@ export default function Cart() {
       </Card>
     </div>
   );
-}
-
-async function loadStripe(key: string | undefined) {
-  if (!key) return null;
-  if (typeof window === 'undefined') return null;
-
-  const stripe = await Stripe(key);
-  return stripe;
 }

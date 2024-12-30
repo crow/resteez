@@ -60,7 +60,7 @@ export function registerRoutes(app: Express): Server {
     const webhookUrl = `${baseUrl}/api/webhooks/stripe`;
     console.log('Request headers:', req.headers);
     console.log('Generated URLs:', { baseUrl, webhookUrl });
-    res.json({ 
+    res.json({
       baseUrl,
       webhookUrl
     });
@@ -132,21 +132,22 @@ export function registerRoutes(app: Express): Server {
             currency: 'usd',
             product_data: {
               name: item.name,
-              images: [item.image],
+              // Use absolute URLs for images
+              images: [new URL(item.image, `${req.protocol}://${req.get('host')}`).toString()],
             },
-            unit_amount: Math.round(item.price * 100),
+            unit_amount: Math.round(item.price * 100), // Convert to cents
           },
           quantity: item.quantity,
         })),
         mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/cart`,
         shipping_address_collection: {
-          allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'DK', 'FI', 'JP'],
+          allowed_countries: ['US'],
         },
         metadata: {
           orderId: order.id.toString()
-        },
-        success_url: `${req.protocol}://${req.get('host')}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.protocol}://${req.get('host')}/cart`,
+        }
       });
 
       res.json({

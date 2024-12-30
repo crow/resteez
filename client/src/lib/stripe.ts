@@ -1,3 +1,26 @@
+declare const Stripe: any; // Stripe.js is loaded in index.html
+
+let stripePromise: Promise<any> | null = null;
+
+export async function loadStripe() {
+  if (!stripePromise) {
+    stripePromise = Stripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+  }
+  return stripePromise;
+}
+
+export async function redirectToCheckout(sessionId: string) {
+  const stripe = await loadStripe();
+  if (!stripe) {
+    throw new Error('Stripe failed to load');
+  }
+
+  const { error } = await stripe.redirectToCheckout({ sessionId });
+  if (error) {
+    throw error;
+  }
+}
+
 interface PaymentIntentRequest {
   amount: number;
   currency: string;
