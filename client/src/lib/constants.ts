@@ -8,7 +8,7 @@ export const PRODUCT_DATA = {
     "Portable relief: Lightweight and easy to wear at home or on the go—ideal for walking or lying down"
   ],
   images: [
-    "/attached_assets/resteez.jpg",
+    "/attached_assets/51wp2YSRZzL._AC_SX679_PIbundle-2_TopRight_0_0_SH20_-removebg-preview.png",
     "/attached_assets/image_1735506036548.png",
     "/attached_assets/image_1735506140564.png"
   ],
@@ -28,7 +28,7 @@ export const PRODUCT_DATA = {
 
 export const STOCK_PHOTOS = {
   medical: [
-    "/attached_assets/resteez.jpg",
+    "/attached_assets/51wp2YSRZzL._AC_SX679_PIbundle-2_TopRight_0_0_SH20_-removebg-preview.png",
     "/attached_assets/image_1735505993993.png"
   ]
 };
