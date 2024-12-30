@@ -16,8 +16,8 @@ export const products = pgTable("products", {
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   status: text("status").notNull().default('pending'),
-  customerEmail: text("customer_email").notNull(),
-  shippingAddress: jsonb("shipping_address").notNull(),
+  customerEmail: text("customer_email"),
+  shippingAddress: jsonb("shipping_address"),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   stripePaymentId: text("stripe_payment_id"),
   shippingLabelUrl: text("shipping_label_url"),
