@@ -21,13 +21,13 @@ export async function redirectToCheckout(sessionId: string) {
       throw new Error('Failed to load Stripe');
     }
 
-    const result = await stripe.redirectToCheckout({
+    const { error } = await stripe.redirectToCheckout({
       sessionId: sessionId,
     });
 
-    if (result.error) {
-      console.error('Stripe redirect error:', result.error);
-      throw new Error(result.error.message);
+    if (error) {
+      console.error('Stripe redirect error:', error);
+      throw new Error(error.message);
     }
   } catch (err) {
     console.error('Stripe checkout error:', err);

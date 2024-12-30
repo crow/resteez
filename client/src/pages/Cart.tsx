@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PRODUCT_DATA } from "@/lib/constants";
 import { useMutation } from "@tanstack/react-query";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { redirectToCheckout } from "@/lib/stripe";
 
 interface CartItem {
   id: number;
@@ -81,25 +82,11 @@ export default function Cart() {
         }
 
         const data = await response.json();
-        if (!data.url) {
-          throw new Error("No checkout URL returned from server");
+        if (!data.sessionId) {
+          throw new Error("No session ID returned from server");
         }
 
-        // Set a timeout to clear the loading state if redirect fails
-        const redirectTimeout = setTimeout(() => {
-          setIsRedirecting(false);
-          toast({
-            title: "Checkout failed",
-            description: "Failed to redirect to checkout page. Please try again.",
-            variant: "destructive"
-          });
-        }, 5000);
-
-        // Redirect to Stripe's hosted checkout page
-        window.location.assign(data.url);
-
-        // Clear timeout if component unmounts
-        return () => clearTimeout(redirectTimeout);
+        await redirectToCheckout(data.sessionId);
       } catch (error) {
         setIsRedirecting(false);
         console.error('Checkout error:', error);

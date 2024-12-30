@@ -13,7 +13,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2023-08-16",
   typescript: true,
 });
 
@@ -126,7 +126,7 @@ export function registerRoutes(app: Express): Server {
       // Get the base URL for the application
       const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-      // Create Stripe checkout session
+      // Create Stripe checkout session with updated configuration
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "payment",
