@@ -4,7 +4,6 @@ import { db } from "@db";
 import { products, orders, orderItems } from "@db/schema";
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
-import EasyPost from "@easypost/api";
 import multer from "multer";
 import path from "path";
 import express from "express";
@@ -12,8 +11,6 @@ import express from "express";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-12-18.acacia',
 });
-
-const easypost = new EasyPost(process.env.EASYPOST_API_KEY || '');
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -43,25 +40,7 @@ const upload = multer({
 
 // Error handling middleware
 const errorHandler = (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error occurred:', {
-    message: err.message,
-    stack: err.stack,
-    code: err.code,
-    detail: err.detail
-  });
-
-  if (err.code === '23503') { // Foreign key violation
-    return res.status(400).json({
-      error: 'Invalid reference: ' + (err.detail || 'Referenced record does not exist')
-    });
-  }
-
-  if (err.code === 'P2002') { // Unique constraint violation
-    return res.status(400).json({
-      error: 'Record already exists'
-    });
-  }
-
+  console.error('Error occurred:', err);
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -69,24 +48,14 @@ const errorHandler = (err: any, req: express.Request, res: express.Response, nex
 };
 
 export function registerRoutes(app: Express): Server {
-  // Request logging middleware
-  app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
-    next();
-  });
-
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
-
-  // Serve attached assets
   app.use('/attached_assets', express.static('attached_assets'));
 
   // Products routes
   app.get("/api/products", async (req, res, next) => {
     try {
-      console.log('Fetching products...');
       const allProducts = await db.query.products.findMany();
-      console.log('Products fetched:', allProducts);
       res.json(allProducts);
     } catch (error) {
       next(error);
@@ -95,7 +64,6 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/products", upload.single('image'), async (req, res, next) => {
     try {
-      console.log('Creating product with data:', req.body);
       const { name, description, price, inventory } = req.body;
       const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -111,109 +79,97 @@ export function registerRoutes(app: Express): Server {
         image: imageUrl
       }).returning();
 
-      console.log('Product created:', product);
       res.json(product);
     } catch (error) {
       next(error);
     }
   });
 
-  // Cart and checkout routes
+  // Create order and initiate Stripe checkout
   app.post("/api/orders", async (req, res, next) => {
     try {
-      console.log('Creating order with data:', req.body);
-      const { items, customerEmail, shippingAddress } = req.body;
+      const { items } = req.body;
 
       // Calculate total
       const total = items.reduce((acc: number, item: any) =>
         acc + (item.price * item.quantity), 0);
 
-      // Create order
+      // Create pending order
       const [order] = await db.insert(orders).values({
-        customerEmail,
-        shippingAddress,
+        status: 'pending',
         total,
-        status: 'pending'
       }).returning();
 
-      console.log('Order created:', order);
-
       // Create order items
-      const orderItemsPromises = items.map(async (item: any) => {
-        return db.insert(orderItems).values({
+      await Promise.all(items.map((item: any) =>
+        db.insert(orderItems).values({
           orderId: order.id,
-          productId: item.productId,
+          productId: item.id,
           quantity: item.quantity,
           price: item.price
-        });
+        })
+      ));
+
+      // Create Stripe checkout session
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: items.map((item: any) => ({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.name,
+              images: [item.image],
+            },
+            unit_amount: Math.round(item.price * 100),
+          },
+          quantity: item.quantity,
+        })),
+        mode: 'payment',
+        shipping_address_collection: {
+          allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'DK', 'FI', 'JP'],
+        },
+        metadata: {
+          orderId: order.id.toString()
+        },
+        success_url: `${req.protocol}://${req.get('host')}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/cart`,
       });
 
-      await Promise.all(orderItemsPromises);
-
-      res.json({
-        orderId: order.id,
+      res.json({ 
+        sessionId: session.id,
+        orderId: order.id
       });
     } catch (error) {
       next(error);
     }
   });
 
-  // Finalize order
-  app.post("/api/orders/:orderId/finalize", async (req, res, next) => {
+  // Check session status and update order
+  app.get("/api/orders/:orderId/check-payment", async (req, res, next) => {
     try {
       const { orderId } = req.params;
-      const { customerEmail, shippingAddress } = req.body;
+      const { sessionId } = req.query;
 
-      const order = await db.query.orders.findFirst({
-        where: eq(orders.id, parseInt(orderId))
-      });
-
-      if (!order) {
-        return res.status(404).json({ error: 'Order not found' });
+      if (!sessionId) {
+        return res.status(400).json({ error: 'Session ID is required' });
       }
 
-      // Update order with customer info
-      await db.update(orders)
-        .set({
-          customerEmail,
-          shippingAddress,
-          status: 'confirmed'
-        })
-        .where(eq(orders.id, parseInt(orderId)));
+      const session = await stripe.checkout.sessions.retrieve(sessionId as string);
 
-      // Create shipping label
-      const shipment = await easypost.Shipment.create({
-        to_address: shippingAddress,
-        from_address: {
-          company: 'Medical Devices Co',
-          street1: '123 Shipper St',
-          city: 'San Francisco',
-          state: 'CA',
-          zip: '94111',
-          country: 'US'
-        },
-        parcel: {
-          length: 9,
-          width: 6,
-          height: 2,
-          weight: 10
-        }
-      });
+      if (session.payment_status === 'paid') {
+        // Update order status and add shipping details
+        await db.update(orders)
+          .set({
+            status: 'confirmed',
+            customerEmail: session.customer_details?.email,
+            shippingAddress: session.shipping_details
+          })
+          .where(eq(orders.id, parseInt(orderId)));
 
-      // Buy the lowest rate
-      const rate = await shipment.lowestRate();
-      const label = await shipment.buy(rate);
+        return res.json({ status: 'confirmed' });
+      }
 
-      // Update order with shipping info
-      await db.update(orders)
-        .set({
-          status: 'fulfilled',
-          shippingLabelUrl: label.postageLabel.labelUrl,
-          trackingNumber: label.trackingCode
-        })
-        .where(eq(orders.id, parseInt(orderId)));
-
-      res.json({ success: true });
+      res.json({ status: session.payment_status });
     } catch (error) {
       next(error);
     }

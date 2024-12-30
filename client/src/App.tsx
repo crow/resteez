@@ -3,7 +3,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import Home from "@/pages/Home";
 import Cart from "@/pages/Cart";
-import Checkout from "@/pages/Checkout";
+import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import Dashboard from "@/pages/Dashboard";
 import LearnMore from "@/pages/LearnMore";
 
@@ -17,7 +17,7 @@ function App() {
             <Route path="/" component={Home} />
             <Route path="/learn-more" component={LearnMore} />
             <Route path="/cart" component={Cart} />
-            <Route path="/checkout" component={Checkout} />
+            <Route path="/checkout/success" component={CheckoutSuccess} />
             <Route path="/dashboard" component={Dashboard} />
           </Switch>
         </main>

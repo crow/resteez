@@ -16,6 +16,8 @@ interface CartItem {
   image: string;
 }
 
+declare const Stripe: any; // Stripe.js will be loaded in index.html
+
 export default function Cart() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -52,65 +54,43 @@ export default function Cart() {
     0
   );
 
-  const createOrder = useMutation({
+  const checkout = useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/orders", {
+      // First create the order
+      const orderResponse = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          items: cartItems.map(item => ({
-            productId: item.id,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          customerEmail: "customer@example.com", // This would come from auth in a real app
-          shippingAddress: {
-            name: "Customer Name",
-            street1: "123 Main St",
-            city: "San Francisco",
-            state: "CA",
-            zip: "94111",
-            country: "US"
-          }
+          items: cartItems
         })
       });
 
-      if (!response.ok) {
+      if (!orderResponse.ok) {
         throw new Error("Failed to create order");
       }
 
-      const data = await response.json();
-      return data;
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Order created",
-        description: "Your order has been placed successfully."
+      const { sessionId } = await orderResponse.json();
+
+      // Initialize Stripe and redirect to checkout
+      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+      if (!stripe) throw new Error("Stripe failed to load");
+
+      const { error } = await stripe.redirectToCheckout({
+        sessionId
       });
-      setLocation("/checkout?orderId=" + data.orderId);
+
+      if (error) throw error;
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to create order. Please try again.",
+        description: "Failed to proceed to checkout. Please try again.",
         variant: "destructive"
       });
     }
   });
-
-  const proceedToCheckout = () => {
-    if (cartItems.length === 0) {
-      toast({
-        title: "Cart is empty",
-        description: "Please add items to your cart before checking out.",
-        variant: "destructive"
-      });
-      return;
-    }
-    createOrder.mutate();
-  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -176,13 +156,21 @@ export default function Cart() {
           <Button
             className="w-full"
             size="lg"
-            onClick={proceedToCheckout}
-            disabled={cartItems.length === 0 || createOrder.isPending}
+            onClick={() => checkout.mutate()}
+            disabled={cartItems.length === 0 || checkout.isPending}
           >
-            {createOrder.isPending ? "Processing..." : "Proceed to Checkout"}
+            {checkout.isPending ? "Processing..." : "Proceed to Checkout"}
           </Button>
         </CardFooter>
       </Card>
     </div>
   );
+}
+
+async function loadStripe(key: string | undefined) {
+  if (!key) return null;
+  if (typeof window === 'undefined') return null;
+
+  const stripe = await Stripe(key);
+  return stripe;
 }
