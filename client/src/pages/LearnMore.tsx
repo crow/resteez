@@ -40,7 +40,7 @@ export default function LearnMore() {
       </section> */}
 
       {/* Medical Information Section */}
-      <section className="space-y-8">
+      <section className="max-w-4xl mx-auto space-y-8">
         <h2 className="text-3xl font-bold">
           Understanding Restless Leg Syndrome (RLS)
         </h2>
@@ -80,7 +80,7 @@ export default function LearnMore() {
       </section>
 
       {/* Research Studies Section */}
-      <section className="space-y-8 bg-muted/30 p-8 rounded-lg">
+      <section className="max-w-4xl mx-auto space-y-8 bg-muted/30 p-8 rounded-lg">
         <div className="flex items-center gap-4">
           <BookOpen className="h-8 w-8 text-primary" />
           <h2 className="text-3xl font-bold">Clinical Research</h2>
@@ -115,7 +115,7 @@ export default function LearnMore() {
       </section>
 
       {/* Features Section */}
-      <section className="space-y-8">
+      <section className="max-w-4xl mx-auto space-y-8">
         <h2 className="text-3xl font-bold">Key Features</h2>
         <div className="grid md:grid-cols-2 gap-8">
           {PRODUCT_DATA.features.map((feature, index) => (
@@ -151,7 +151,7 @@ export default function LearnMore() {
       <TestimonialCarousel />
 
       {/* CTA Section */}
-      <section className="text-center space-y-6">
+      <section className="max-w-4xl mx-auto text-center space-y-6">
         <h2 className="text-3xl font-bold">
           Ready to Experience Better Sleep?
         </h2>
