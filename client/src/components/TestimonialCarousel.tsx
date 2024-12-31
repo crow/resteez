@@ -17,7 +17,7 @@ const testimonials = [
     location: "California",
     rating: 5,
     verified: true,
-    text: "After struggling with restless leg syndrome for years, the RestEaze pressure device has been a game-changer. I can finally get a full night's sleep without disruption.",
+    text: "After struggling with restless leg syndrome for years, the resteez band has been a game-changer. I can finally get a full night's sleep without disruption.",
     date: "2024-11-15"
   },
   {
@@ -35,7 +35,7 @@ const testimonials = [
     location: "New York",
     rating: 5,
     verified: true,
-    text: "As a healthcare professional, I was skeptical at first. But after trying RestEaze, I now recommend it to my patients with RLS. The results speak for themselves.",
+    text: "As a healthcare professional, I was skeptical at first. But after trying resteez, I now recommend it to my patients with RLS. The results speak for themselves.",
     date: "2024-12-01"
   },
   {
@@ -56,7 +56,7 @@ export function TestimonialCarousel() {
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-4">Patient Success Stories</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Read verified testimonials from patients who have found relief with RestEaze
+            Read verified testimonials from patients who have found relief with resteez
           </p>
         </div>
 

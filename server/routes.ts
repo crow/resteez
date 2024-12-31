@@ -124,7 +124,7 @@ export function registerRoutes(app: Express): Server {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'RestEaze RLS Relief Band',
+              name: 'resteez RLS relief band',
               description: 'Relief band for Restless Legs Syndrome',
             },
             unit_amount: 1999, // $19.99 in cents
