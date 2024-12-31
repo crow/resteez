@@ -1,6 +1,8 @@
+import 'dotenv/config';  // Add this at the top
 import { drizzle } from "drizzle-orm/neon-serverless";
 import ws from "ws";
 import * as schema from "@db/schema";
+import { sql } from "drizzle-orm";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
