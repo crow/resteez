@@ -36,17 +36,7 @@ export async function redirectToCheckout(sessionId: string) {
 }
 
 interface PaymentIntentRequest {
-  amount: number;
-  currency: string;
-  shipping: {
-    name: string;
-    address: {
-      line1: string;
-      city: string;
-      state: string;
-      postal_code: string;
-    };
-  };
+  quantity: number;
 }
 
 export async function createPaymentIntent(data: PaymentIntentRequest) {
@@ -59,13 +49,10 @@ export async function createPaymentIntent(data: PaymentIntentRequest) {
       body: JSON.stringify({
         items: [
           {
-            productId: 1,
-            quantity: 1,
-            price: data.amount / 100,
+            quantity: data.quantity,
+            lookupKey: import.meta.env.VITE_RESTEEZ_LOOKUP_KEY,
           },
         ],
-        customerEmail: data.shipping.name,
-        shippingAddress: data.shipping.address,
       }),
     });
 

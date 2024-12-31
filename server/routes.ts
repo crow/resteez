@@ -12,8 +12,12 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY must be set");
 }
 
+if (!process.env.RESTEEZ_LOOKUP_KEY) {
+  throw new Error("RESTEEZ_LOOKUP_KEY must be set");
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-08-16",
+  apiVersion: "2024-12-18.acacia",
   typescript: true,
 });
 
@@ -96,55 +100,46 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Invalid items array" });
       }
 
-      // Calculate total
-      const total = items.reduce(
-        (acc: number, item: any) => acc + item.price * item.quantity,
-        0,
-      );
+      // Fetch price using lookup key
+      const prices = await stripe.prices.search({
+        query: `active:\'true\' AND lookup_key:\'${process.env.RESTEEZ_LOOKUP_KEY}\'`,
+      });
+
+      if (!prices.data.length) {
+        return res.status(404).json({ error: "Price not found" });
+      }
+
+      const price = prices.data[0];
+      const product = await stripe.products.retrieve(price.product as string);
 
       // Create pending order
       const [order] = await db
         .insert(orders)
         .values({
           status: "pending",
-          total: total.toString(),
+          total: ((price.unit_amount || 0) * items[0].quantity / 100).toString(),
         })
         .returning();
 
       // Create order items
-      await Promise.all(
-        items.map((item: any) =>
-          db.insert(orderItems).values({
-            orderId: order.id,
-            productId: item.id,
-            quantity: item.quantity,
-            price: item.price.toString(),
-          }),
-        ),
-      );
+      await db.insert(orderItems).values({
+        orderId: order.id,
+        productId: 1, // Assuming this is the RestEaze product ID
+        quantity: items[0].quantity,
+        price: ((price.unit_amount || 0) / 100).toString(),
+      });
 
       // Get the base URL for the application
       const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-      // Create Stripe checkout session with updated configuration
+      // Create Stripe checkout session with the lookup key
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "payment",
-        line_items: items.map((item: any) => ({
-          quantity: item.quantity,
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: item.name,
-              images: [
-                item.image.startsWith("http")
-                  ? item.image
-                  : `${baseUrl}${item.image}`,
-              ],
-            },
-            unit_amount: Math.round(item.price * 100), // Convert to cents
-          },
-        })),
+        line_items: [{
+          price: price.id,
+          quantity: items[0].quantity,
+        }],
         success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
         cancel_url: `${baseUrl}/cart`,
         shipping_address_collection: {

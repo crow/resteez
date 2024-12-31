@@ -12,7 +12,6 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 interface CartItem {
   id: number;
   name: string;
-  price: number;
   quantity: number;
   image: string;
 }
@@ -25,7 +24,6 @@ export default function Cart() {
     {
       id: 1,
       name: PRODUCT_DATA.name,
-      price: PRODUCT_DATA.price,
       quantity: 1,
       image: PRODUCT_DATA.images[0]
     }
@@ -49,16 +47,11 @@ export default function Cart() {
     });
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
   const checkout = useMutation({
     mutationFn: async () => {
       try {
         setIsRedirecting(true);
-        // Create order and get checkout session
+        // Create order using lookup key
         const response = await fetch("/api/orders", {
           method: "POST",
           headers: {
@@ -66,11 +59,8 @@ export default function Cart() {
           },
           body: JSON.stringify({
             items: cartItems.map(item => ({
-              id: item.id,
               quantity: item.quantity,
-              price: item.price,
-              name: item.name,
-              image: item.image
+              lookupKey: import.meta.env.VITE_RESTEEZ_LOOKUP_KEY
             }))
           })
         });
@@ -85,7 +75,7 @@ export default function Cart() {
           throw new Error("No checkout URL returned from server");
         }
 
-        // Directly redirect to the Stripe URL
+        // Redirect to Stripe checkout
         window.location.href = data.url;
       } catch (error) {
         setIsRedirecting(false);
@@ -110,7 +100,6 @@ export default function Cart() {
         <LoadingOverlay message="Preparing your checkout..." />
       )}
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* Back Button */}
         <Button
           variant="ghost"
           className="button-neo mb-8"
@@ -142,7 +131,7 @@ export default function Cart() {
                     <div className="flex-1">
                       <h3 className="font-semibold">{item.name}</h3>
                       <p className="text-muted-foreground">
-                        ${item.price.toFixed(2)}
+                        Price will be calculated at checkout
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -182,8 +171,8 @@ export default function Cart() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex justify-between text-lg font-semibold">
-                  <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>Total</span>
+                  <span>Calculated at checkout</span>
                 </div>
               </CardContent>
               <CardFooter className="p-4">
