@@ -52,7 +52,7 @@ const testimonials = [
 export function TestimonialCarousel() {
   return (
     <section className="py-12 bg-muted/30">
-      <div className="container">
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-4">Patient Success Stories</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -65,11 +65,11 @@ export function TestimonialCarousel() {
             align: "start",
             loop: true,
           }}
-          className="w-full max-w-5xl mx-auto"
+          className="w-full"
         >
           <CarouselContent>
             {testimonials.map((testimonial) => (
-              <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
+              <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
                 <Card className="border-none shadow-md">
                   <CardContent className="p-6">
                     <div className="mb-4 flex items-center justify-between">
@@ -87,12 +87,12 @@ export function TestimonialCarousel() {
                         </Badge>
                       )}
                     </div>
-                    
+
                     <Quote className="h-8 w-8 text-primary/20 mb-2" />
                     <p className="text-muted-foreground mb-4">
                       {testimonial.text}
                     </p>
-                    
+
                     <div className="mt-4 pt-4 border-t">
                       <p className="font-semibold">{testimonial.name}</p>
                       <p className="text-sm text-muted-foreground">
@@ -104,8 +104,10 @@ export function TestimonialCarousel() {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <div className="flex justify-center mt-4">
+            <CarouselPrevious className="relative static translate-y-0 mr-2" />
+            <CarouselNext className="relative static translate-y-0 ml-2" />
+          </div>
         </Carousel>
       </div>
     </section>
