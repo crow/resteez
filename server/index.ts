@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setupAuth, createInitialAdminUser } from "./auth";
 
 // Validate required environment variables
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -9,6 +10,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 if (!process.env.VITE_STRIPE_PUBLIC_KEY) {
   throw new Error('VITE_STRIPE_PUBLIC_KEY environment variable is required');
+}
+
+if (!process.env.ADMIN_LOGIN_PASS) {
+  throw new Error('ADMIN_LOGIN_PASS environment variable is required');
 }
 
 const app = express();
@@ -54,8 +59,13 @@ app.use((req, res, next) => {
   next();
 });
 
-
 (async () => {
+  // Set up authentication
+  setupAuth(app);
+
+  // Create initial admin user
+  await createInitialAdminUser();
+
   const server = registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

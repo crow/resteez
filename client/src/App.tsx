@@ -6,8 +6,21 @@ import Cart from "@/pages/Cart";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import Dashboard from "@/pages/Dashboard";
 import LearnMore from "@/pages/LearnMore";
+import Login from "@/pages/Login";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
 function App() {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="ui-theme">
       <div className="min-h-screen bg-background">
@@ -18,6 +31,7 @@ function App() {
             <Route path="/learn-more" component={LearnMore} />
             <Route path="/cart" component={Cart} />
             <Route path="/checkout/success" component={CheckoutSuccess} />
+            <Route path="/login" component={Login} />
             <Route path="/dashboard" component={Dashboard} />
           </Switch>
         </main>

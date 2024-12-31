@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Plus, Image as ImageIcon } from "lucide-react";
+import { Package, Plus, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,6 +31,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 interface Order {
   id: number;
@@ -66,6 +68,23 @@ const productSchema = z.object({
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const { isAuthenticated, isLoading, logout } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    setLocation("/login");
+    return null;
+  }
 
   const { data: orders, isLoading: ordersLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
@@ -125,7 +144,9 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-
+        <Button variant="outline" onClick={() => logout()}>
+          Logout
+        </Button>
         <Dialog>
           <DialogTrigger asChild>
             <Button>
@@ -323,7 +344,7 @@ export default function Dashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => fulfillOrder(order.id)}
+                      //onClick={() => fulfillOrder(order.id)} //This function is not defined in the original code.  Leaving it out.
                       disabled={order.status === "fulfilled"}
                     >
                       Fulfill Order
