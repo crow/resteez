@@ -14,6 +14,7 @@ interface CartItem {
   name: string;
   quantity: number;
   image: string;
+  price: number;
 }
 
 export default function Cart() {
@@ -26,6 +27,7 @@ export default function Cart() {
       name: PRODUCT_DATA.name,
       quantity: 1,
       image: PRODUCT_DATA.images[0],
+      price: PRODUCT_DATA.price
     }
   ]);
 
@@ -48,80 +50,90 @@ export default function Cart() {
   };
 
   const calculateTotal = () => {
-    return cartItems.reduce((sum, item) => sum + (19.99 * item.quantity), 0);
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
   const checkout = useMutation({
     mutationFn: async () => {
       try {
         setIsRedirecting(true);
-
         const response = await fetch("/api/orders", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            items: [{
-              quantity: cartItems[0].quantity
-            }]
+            items: cartItems.map(item => ({
+              quantity: item.quantity,
+              lookupKey: import.meta.env.VITE_RESTEEZ_LOOKUP_KEY
+            }))
           })
         });
 
         if (!response.ok) {
-          throw new Error("Failed to create order");
+          const error = await response.json();
+          console.error('Checkout response error:', error);
+          throw new Error(error.message || error.error || "Failed to create order");
         }
 
         const data = await response.json();
+        console.log('Checkout response:', data);
+
+        if (!data.url) {
+          throw new Error("No checkout URL returned from server");
+        }
+
         window.location.href = data.url;
       } catch (error) {
         setIsRedirecting(false);
+        console.error('Checkout error:', error);
         throw error;
       }
     },
     onError: (error) => {
       setIsRedirecting(false);
+      console.error('Checkout mutation error:', error);
       toast({
         title: "Checkout failed",
-        description: "Failed to process checkout. Please try again.",
+        description: error instanceof Error
+          ? `Error: ${error.message}. Please try again or contact support if the issue persists.`
+          : "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     }
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col h-[calc(100vh-5rem)] overflow-hidden">
       {isRedirecting && (
         <LoadingOverlay message="Preparing your checkout..." />
       )}
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Button
+            variant="ghost"
+            className="button-neo"
+            onClick={() => setLocation("/")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
 
-      <div className="flex-1 container mx-auto px-4 py-6 pb-32">
-        <Button
-          variant="ghost"
-          className="button-neo mb-6"
-          onClick={() => setLocation("/")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Button>
+          <h1 className="text-3xl font-bold">Shopping Cart</h1>
 
-        <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
-
-        {cartItems.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground">Your cart is empty</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {cartItems.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {/* Product Image and Info */}
-                    <div className="flex gap-4 items-center">
-                      <div className="w-20 h-20 relative flex-shrink-0">
+          {cartItems.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">Your cart is empty</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <Card key={item.id}>
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <div className="w-24 h-24 relative flex-shrink-0">
                         <img
                           src={item.image}
                           alt={item.name}
@@ -131,83 +143,68 @@ export default function Cart() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold truncate">{item.name}</h3>
                         <p className="text-muted-foreground">
-                          $19.99 each
+                          ${item.price.toFixed(2)} each
+                        </p>
+                        <p className="font-medium">
+                          Subtotal: ${(item.price * item.quantity).toFixed(2)}
                         </p>
                       </div>
-                    </div>
-
-                    {/* Quantity Controls and Total */}
-                    <div className="flex flex-col sm:flex-row gap-4 items-center sm:ml-auto">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => updateQuantity(item.id, -1)}
-                          className="h-8 w-8"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-4 w-4" />
                         </Button>
                         <Input
                           type="number"
                           value={item.quantity}
-                          className="w-14 text-center h-8"
+                          className="w-16 text-center"
                           readOnly
                         />
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => updateQuantity(item.id, 1)}
-                          className="h-8 w-8"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </Button>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <p className="font-medium whitespace-nowrap">
-                          Subtotal: ${(19.99 * item.quantity).toFixed(2)}
-                        </p>
                         <Button
                           variant="destructive"
                           size="icon"
                           onClick={() => removeItem(item.id)}
-                          className="h-8 w-8"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="sticky bottom-0 mt-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <CardContent className="p-4">
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Total</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
                   </div>
                 </CardContent>
+                <CardFooter className="p-4">
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => checkout.mutate()}
+                    disabled={cartItems.length === 0 || checkout.isPending || isRedirecting}
+                  >
+                    {checkout.isPending || isRedirecting ? "Processing..." : "Proceed to Checkout"}
+                  </Button>
+                </CardFooter>
               </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {cartItems.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border">
-          <div className="container mx-auto px-4">
-            <Card className="mx-auto max-w-4xl border-0 bg-transparent shadow-none">
-              <CardContent className="p-4">
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>${calculateTotal().toFixed(2)}</span>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4">
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={() => checkout.mutate()}
-                  disabled={cartItems.length === 0 || checkout.isPending || isRedirecting}
-                >
-                  {checkout.isPending || isRedirecting ? "Processing..." : "Proceed to Checkout"}
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

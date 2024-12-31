@@ -12,7 +12,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY must be set");
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+  typescript: true,
+});
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -84,7 +87,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Create order with fixed price
+  // Update the order creation endpoint to use fixed price
   app.post("/api/orders", async (req, res) => {
     try {
       const { items } = req.body;
@@ -93,16 +96,12 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Invalid items array" });
       }
 
-      const quantity = items[0].quantity;
-      const unitPrice = 1999; // $19.99 in cents
-      const totalAmount = unitPrice * quantity;
-
-      // Create pending order
+      // Create pending order with fixed price
       const [order] = await db
         .insert(orders)
         .values({
           status: "pending",
-          total: (totalAmount / 100).toString(), // Convert cents to dollars
+          total: (19.99 * items[0].quantity).toString(),
         })
         .returning();
 
@@ -110,8 +109,8 @@ export function registerRoutes(app: Express): Server {
       await db.insert(orderItems).values({
         orderId: order.id,
         productId: 1, // RestEaze product ID
-        quantity: quantity,
-        price: "19.99", // Fixed price in dollars
+        quantity: items[0].quantity,
+        price: "19.99", // Fixed price
       });
 
       // Get the base URL for the application
@@ -128,9 +127,9 @@ export function registerRoutes(app: Express): Server {
               name: 'resteez RLS relief band',
               description: 'Relief band for Restless Legs Syndrome',
             },
-            unit_amount: unitPrice,
+            unit_amount: 1999, // $19.99 in cents
           },
-          quantity: quantity,
+          quantity: items[0].quantity,
         }],
         success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
         cancel_url: `${baseUrl}/cart`,
@@ -142,13 +141,111 @@ export function registerRoutes(app: Express): Server {
         },
       });
 
-      res.json({ url: session.url });
+      console.log('Created checkout session:', { 
+        sessionId: session.id, 
+        url: session.url 
+      });
+
+      res.json({
+        url: session.url,
+        sessionId: session.id,
+        orderId: order.id,
+      });
     } catch (error) {
+      console.error("Checkout error:", error);
       res.status(500).json({
-        error: "Failed to create checkout session"
+        error: "Failed to create checkout session",
+        message: error instanceof Error ? error.message : "Unknown error",
+        details: process.env.NODE_ENV === 'development' ? error : undefined
       });
     }
   });
+
+  // Check payment status
+  app.get("/api/orders/:orderId/check-payment", async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { sessionId } = req.query;
+
+      if (!sessionId || typeof sessionId !== "string") {
+        return res.status(400).json({ error: "Session ID is required" });
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.payment_status === "paid") {
+        // Update order status and add shipping details
+        await db
+          .update(orders)
+          .set({
+            status: "confirmed",
+            customerEmail: session.customer_details?.email,
+            shippingAddress: session.shipping_details,
+          })
+          .where(eq(orders.id, parseInt(orderId)));
+
+        return res.json({ status: "confirmed" });
+      }
+
+      res.json({ status: session.payment_status });
+    } catch (error) {
+      console.error("Payment check error:", error);
+      res.status(500).json({
+        error: "Failed to check payment status",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Webhook handler for Stripe events
+  app.post(
+    "/api/webhooks/stripe",
+    express.raw({ type: "application/json" }),
+    async (req, res) => {
+      const sig = req.headers["stripe-signature"];
+      let event;
+
+      try {
+        event = stripe.webhooks.constructEvent(
+          req.body,
+          sig || "",
+          process.env.STRIPE_WEBHOOK_SECRET || "",
+        );
+      } catch (err) {
+        console.error("Webhook signature verification failed");
+        return res.status(400).send("Webhook signature verification failed");
+      }
+
+      // Handle checkout.session.completed
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+
+        try {
+          // Update order status and add shipping details
+          const orderId = session.metadata?.orderId;
+          if (!orderId) {
+            throw new Error("No order ID in metadata");
+          }
+
+          await db
+            .update(orders)
+            .set({
+              status: "confirmed",
+              customerEmail: session.customer_details?.email,
+              shippingAddress: session.shipping_details,
+            })
+            .where(eq(orders.id, parseInt(orderId)));
+
+          console.log(`Order ${orderId} confirmed via webhook`);
+        } catch (error) {
+          console.error("Error processing webhook:", error);
+          return res.status(500).send("Error processing webhook");
+        }
+      }
+
+      res.json({ received: true });
+    },
+  );
 
   // Register error handling middleware last
   app.use(errorHandler);

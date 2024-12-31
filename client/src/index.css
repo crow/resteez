@@ -63,46 +63,44 @@
     @apply bg-primary text-white border-[4px] border-[hsl(var(--primary))]
            shadow-[6px_6px_0_0_hsl(var(--shadow))]
            transform-gpu translate-x-0 translate-y-0
-           transition-all duration-200 ease-out;
-    /* Increased duration and changed timing function to prevent vibration */
+           transition-all duration-150 ease-in-out;
   }
 
   .button-neo:hover {
     @apply shadow-[8px_8px_0_0_hsl(var(--shadow))]
            translate-x-[-2px] translate-y-[-2px]
-           transition-all duration-200 ease-out;
-    /* Synchronized duration with the base state */
+           transition-all duration-150 ease-in-out;
   }
 
   .button-neo:active {
     @apply shadow-none
            translate-x-[1px] translate-y-[1px]
-           transition-all duration-75 ease-out;
+           transition-all duration-75 ease-in-out;
   }
 
   /* Product cards */
   .product-card {
     @apply bg-background border-[4px] border-[hsl(var(--primary))] 
-           transition-all duration-200 ease-out;
+           transition-all duration-200 ease-in-out;
   }
 
   /* Feature cards */
   .feature-card {
     @apply bg-background border-[4px] border-[hsl(var(--primary))] p-6 text-left 
-           transition-all duration-200 ease-out;
+           transition-all duration-200 ease-in-out;
   }
 
   /* Feature description cards */
   .feature-description {
     @apply bg-background p-6 rounded-none border-[4px] border-[hsl(var(--primary))] 
-           transition-all duration-200 ease-out;
+           transition-all duration-200 ease-in-out;
   }
 
   /* Form elements */
   .form-input {
     @apply bg-background border-[4px] border-[hsl(var(--primary))]
            focus:outline-none focus:ring-0
-           transition-all duration-200 ease-out;
+           transition-all duration-200 ease-in-out;
   }
 
   /* Tables */
