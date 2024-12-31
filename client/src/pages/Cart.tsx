@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PRODUCT_DATA } from "@/lib/constants";
 import { useMutation } from "@tanstack/react-query";
@@ -110,6 +110,16 @@ export default function Cart() {
         <LoadingOverlay message="Preparing your checkout..." />
       )}
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="button-neo mb-8"
+          onClick={() => setLocation("/")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
+        </Button>
+
         <h1 className="text-3xl font-bold">Shopping Cart</h1>
 
         {cartItems.length === 0 ? (

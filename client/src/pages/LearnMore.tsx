@@ -18,12 +18,14 @@ export default function LearnMore() {
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Home
       </Button>
-
-      {/* Hero Section */}
-      <section className="grid md:grid-cols-2 gap-12">
+{/* 
+      Hero Section */}
+      {/* <section className="grid md:grid-cols-2 gap-12">
         <div className="space-y-6">
           <h1 className="text-5xl font-bold">{PRODUCT_DATA.name}</h1>
-          <p className="text-xl text-foreground/80">{PRODUCT_DATA.description}</p>
+          <p className="text-xl text-foreground/80">
+            {PRODUCT_DATA.description}
+          </p>
           <div className="text-3xl font-bold bg-primary text-primary-foreground inline-block px-4 py-2">
             ${PRODUCT_DATA.price.toFixed(2)}
           </div>
@@ -35,11 +37,13 @@ export default function LearnMore() {
             className="absolute inset-0 w-full h-full object-cover border-4 border-[hsl(var(--primary))]"
           />
         </div>
-      </section>
+      </section> */}
 
       {/* Medical Information Section */}
       <section className="space-y-8">
-        <h2 className="text-3xl font-bold">Understanding Restless Leg Syndrome (RLS)</h2>
+        <h2 className="text-3xl font-bold">
+          Understanding Restless Leg Syndrome (RLS)
+        </h2>
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <div className="flex items-start gap-4">
@@ -47,8 +51,10 @@ export default function LearnMore() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">What is RLS?</h3>
                 <p className="text-muted-foreground">
-                  Restless Leg Syndrome (RLS) is a neurological disorder characterized by an irresistible urge to move the legs, 
-                  often accompanied by uncomfortable sensations. This condition affects up to 10% of the U.S. population, significantly 
+                  Restless Leg Syndrome (RLS) is a neurological disorder
+                  characterized by an irresistible urge to move the legs, often
+                  accompanied by uncomfortable sensations. This condition
+                  affects up to 10% of the U.S. population, significantly
                   impacting sleep quality and daily life.
                 </p>
               </div>
@@ -58,10 +64,14 @@ export default function LearnMore() {
             <div className="flex items-start gap-4">
               <Brain className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
               <div>
-                <h3 className="text-xl font-semibold mb-2">The Science Behind Pressure Therapy</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  The Science Behind Pressure Therapy
+                </h3>
                 <p className="text-muted-foreground">
-                  Research has shown that targeted pressure application can help alleviate RLS symptoms. A 2021 study in the 
-                  Journal of Clinical Sleep Medicine found that pressure therapy led to a 40% reduction in RLS symptoms among participants.
+                  Research has shown that targeted pressure application can help
+                  alleviate RLS symptoms. A 2021 study in the Journal of
+                  Clinical Sleep Medicine found that pressure therapy led to a
+                  40% reduction in RLS symptoms among participants.
                 </p>
               </div>
             </div>
@@ -77,9 +87,12 @@ export default function LearnMore() {
         </div>
         <div className="space-y-6">
           <div className="border-l-4 border-primary pl-6 space-y-2">
-            <h3 className="text-xl font-semibold">Pressure Point Therapy Study (2023)</h3>
+            <h3 className="text-xl font-semibold">
+              Pressure Point Therapy Study (2023)
+            </h3>
             <p className="text-muted-foreground">
-              A comprehensive study published in Sleep Medicine Reviews demonstrated that consistent pressure point therapy resulted in:
+              A comprehensive study published in Sleep Medicine Reviews
+              demonstrated that consistent pressure point therapy resulted in:
             </p>
             <ul className="list-disc list-inside text-muted-foreground ml-4 space-y-2">
               <li>62% improvement in sleep quality</li>
@@ -88,10 +101,14 @@ export default function LearnMore() {
             </ul>
           </div>
           <div className="border-l-4 border-primary pl-6 space-y-2">
-            <h3 className="text-xl font-semibold">Long-term Efficacy Research (2022)</h3>
+            <h3 className="text-xl font-semibold">
+              Long-term Efficacy Research (2022)
+            </h3>
             <p className="text-muted-foreground">
-              A longitudinal study in the European Journal of Neurology found that regular use of pressure therapy devices led to sustained 
-              symptom relief in 70% of patients over a 12-month period, with minimal side effects compared to pharmaceutical interventions.
+              A longitudinal study in the European Journal of Neurology found
+              that regular use of pressure therapy devices led to sustained
+              symptom relief in 70% of patients over a 12-month period, with
+              minimal side effects compared to pharmaceutical interventions.
             </p>
           </div>
         </div>
@@ -115,7 +132,7 @@ export default function LearnMore() {
       </section>
 
       {/* Additional Images */}
-      <section className="space-y-8">
+      {/* <section className="space-y-8">
         <h2 className="text-3xl font-bold">Product Gallery</h2>
         <div className="grid md:grid-cols-2 gap-8">
           {PRODUCT_DATA.images.slice(1).map((image, index) => (
@@ -128,14 +145,16 @@ export default function LearnMore() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Testimonials Carousel */}
       <TestimonialCarousel />
 
       {/* CTA Section */}
       <section className="text-center space-y-6">
-        <h2 className="text-3xl font-bold">Ready to Experience Better Sleep?</h2>
+        <h2 className="text-3xl font-bold">
+          Ready to Experience Better Sleep?
+        </h2>
         <Button
           className="button-neo text-xl py-8 px-12"
           onClick={() => setLocation("/cart")}
