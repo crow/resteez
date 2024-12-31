@@ -17,7 +17,7 @@ if (!process.env.RESTEEZ_LOOKUP_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2023-10-16",
   typescript: true,
 });
 
@@ -91,7 +91,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Create order and initiate Stripe checkout
+  // Update the order creation endpoint
   app.post("/api/orders", async (req, res) => {
     try {
       const { items } = req.body;
@@ -100,17 +100,25 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Invalid items array" });
       }
 
+      console.log('Creating order with lookup key:', process.env.RESTEEZ_LOOKUP_KEY);
+
       // Fetch price using lookup key
       const prices = await stripe.prices.search({
-        query: `active:\'true\' AND lookup_key:\'${process.env.RESTEEZ_LOOKUP_KEY}\'`,
+        query: `active:'true' AND lookup_key:'${process.env.RESTEEZ_LOOKUP_KEY}'`,
       });
 
+      console.log('Found prices:', prices.data.length);
+
       if (!prices.data.length) {
-        return res.status(404).json({ error: "Price not found" });
+        console.error('No price found for lookup key:', process.env.RESTEEZ_LOOKUP_KEY);
+        return res.status(404).json({ error: "Price not found for the given lookup key" });
       }
 
       const price = prices.data[0];
+      console.log('Selected price:', { id: price.id, unit_amount: price.unit_amount });
+
       const product = await stripe.products.retrieve(price.product as string);
+      console.log('Retrieved product:', { id: product.id, name: product.name });
 
       // Create pending order
       const [order] = await db
@@ -150,6 +158,11 @@ export function registerRoutes(app: Express): Server {
         },
       });
 
+      console.log('Created checkout session:', { 
+        sessionId: session.id, 
+        url: session.url 
+      });
+
       res.json({
         url: session.url,
         sessionId: session.id,
@@ -160,6 +173,7 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({
         error: "Failed to create checkout session",
         message: error instanceof Error ? error.message : "Unknown error",
+        details: process.env.NODE_ENV === 'development' ? error : undefined
       });
     }
   });

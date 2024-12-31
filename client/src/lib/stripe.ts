@@ -41,6 +41,7 @@ interface PaymentIntentRequest {
 
 export async function createPaymentIntent(data: PaymentIntentRequest) {
   try {
+    console.log('Creating payment intent with quantity:', data.quantity);
     const response = await fetch("/api/orders", {
       method: "POST",
       headers: {
@@ -50,17 +51,21 @@ export async function createPaymentIntent(data: PaymentIntentRequest) {
         items: [
           {
             quantity: data.quantity,
-            lookupKey: import.meta.env.VITE_RESTEEZ_LOOKUP_KEY,
+            lookupKey: process.env.RESTEEZ_LOOKUP_KEY,
           },
         ],
       }),
     });
 
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      const error = await response.json();
+      console.error('Payment intent creation error:', error);
+      throw new Error(error.message || error.error || "Network response was not ok");
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('Payment intent created:', data);
+    return data;
   } catch (error) {
     console.error("Error creating payment intent:", error);
     throw error;

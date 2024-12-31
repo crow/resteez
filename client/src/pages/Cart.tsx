@@ -67,10 +67,13 @@ export default function Cart() {
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || "Failed to create order");
+          console.error('Checkout response error:', error);
+          throw new Error(error.message || error.error || "Failed to create order");
         }
 
         const data = await response.json();
+        console.log('Checkout response:', data);
+
         if (!data.url) {
           throw new Error("No checkout URL returned from server");
         }
@@ -85,21 +88,23 @@ export default function Cart() {
     },
     onError: (error) => {
       setIsRedirecting(false);
-      console.error('Checkout error:', error);
+      console.error('Checkout mutation error:', error);
       toast({
         title: "Checkout failed",
-        description: error instanceof Error ? error.message : "Please try again.",
+        description: error instanceof Error
+          ? `Error: ${error.message}. Please try again or contact support if the issue persists.`
+          : "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     }
   });
 
   return (
-    <>
+    <div className="h-[calc(100vh-4rem)] overflow-y-auto">
       {isRedirecting && (
         <LoadingOverlay message="Preparing your checkout..." />
       )}
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8 p-4">
         <Button
           variant="ghost"
           className="button-neo mb-8"
@@ -123,11 +128,13 @@ export default function Cart() {
               {cartItems.map((item) => (
                 <Card key={item.id}>
                   <CardContent className="flex items-center gap-4 p-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-24 h-24 object-contain rounded"
-                    />
+                    <div className="w-24 h-24 relative">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="absolute inset-0 w-full h-full object-contain"
+                      />
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-semibold">{item.name}</h3>
                       <p className="text-muted-foreground">
@@ -189,6 +196,6 @@ export default function Cart() {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
