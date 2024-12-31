@@ -2,7 +2,7 @@ export const PRODUCT_DATA = {
   name: "resteez restless leg syndrome relief band",
   description:
     "Say goodbye to sleepless nights with resteez, the simple yet effective solution for Restless Legs Syndrome (RLS) sufferers. Designed to apply targeted, consistent pressure to the arch of your foot, resteez mimics the soothing relief discovered by RLS sufferers in their own homes. No more t-shirts wrapped in knots around your feet.",
-  price: 9.99,
+  price: 19.99,
   features: [
     "Comfortable targeted pressure: A soft, adjustable band with a cushioned pressure pad and adjustable magnetic pressure nodule that fits snugly under the arch of your foot",
     "Customizable fit: Flexible polymer design ensure a secure, personalized fit for all foot sizes",
