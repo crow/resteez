@@ -8,13 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { PRODUCT_DATA } from "@/lib/constants";
 import { useMutation } from "@tanstack/react-query";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { createPaymentIntent } from "@/lib/stripe";
 
 interface CartItem {
   id: number;
   name: string;
   quantity: number;
   image: string;
-  price: number;
 }
 
 export default function Cart() {
@@ -27,7 +27,6 @@ export default function Cart() {
       name: PRODUCT_DATA.name,
       quantity: 1,
       image: PRODUCT_DATA.images[0],
-      price: PRODUCT_DATA.price
     }
   ]);
 
@@ -50,52 +49,25 @@ export default function Cart() {
   };
 
   const calculateTotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return cartItems.reduce((sum, item) => sum + (19.99 * item.quantity), 0);
   };
 
   const checkout = useMutation({
     mutationFn: async () => {
       try {
         setIsRedirecting(true);
-        const response = await fetch("/api/orders", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            items: cartItems.map(item => ({
-              quantity: item.quantity
-            }))
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          console.error('Checkout response error:', error);
-          throw new Error(error.message || error.error || "Failed to create order");
-        }
-
-        const data = await response.json();
-        console.log('Checkout response:', data);
-
-        if (!data.url) {
-          throw new Error("No checkout URL returned from server");
-        }
-
-        window.location.href = data.url;
+        await createPaymentIntent({ quantity: cartItems[0].quantity });
       } catch (error) {
         setIsRedirecting(false);
-        console.error('Checkout error:', error);
         throw error;
       }
     },
     onError: (error) => {
       setIsRedirecting(false);
-      console.error('Checkout mutation error:', error);
       toast({
         title: "Checkout failed",
         description: error instanceof Error
-          ? `Error: ${error.message}. Please try again or contact support if the issue persists.`
+          ? error.message
           : "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
@@ -130,51 +102,65 @@ export default function Cart() {
           <div className="space-y-4">
             {cartItems.map((item) => (
               <Card key={item.id}>
-                <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4">
-                  <div className="w-20 h-20 relative flex-shrink-0">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <h3 className="font-semibold truncate">{item.name}</h3>
-                    <p className="text-muted-foreground">
-                      ${item.price.toFixed(2)} each
-                    </p>
-                    <p className="font-medium">
-                      Subtotal: ${(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateQuantity(item.id, -1)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <Input
-                      type="number"
-                      value={item.quantity}
-                      className="w-16 text-center"
-                      readOnly
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateQuantity(item.id, 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Product Image and Info */}
+                    <div className="flex gap-4 items-center">
+                      <div className="w-20 h-20 relative flex-shrink-0">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="absolute inset-0 w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold truncate">{item.name}</h3>
+                        <p className="text-muted-foreground">
+                          $19.99 each
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quantity Controls and Total */}
+                    <div className="flex flex-col sm:flex-row gap-4 items-center sm:ml-auto">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateQuantity(item.id, -1)}
+                          className="h-8 w-8"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          className="w-14 text-center h-8"
+                          readOnly
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateQuantity(item.id, 1)}
+                          className="h-8 w-8"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <p className="font-medium whitespace-nowrap">
+                          Subtotal: ${(19.99 * item.quantity).toFixed(2)}
+                        </p>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeItem(item.id)}
+                          className="h-8 w-8"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -52,7 +52,7 @@ const testimonials = [
 export function TestimonialCarousel() {
   return (
     <section className="w-full bg-muted/30">
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-4">Patient Success Stories</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -60,55 +60,57 @@ export function TestimonialCarousel() {
           </p>
         </div>
 
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-        >
-          <CarouselContent>
-            {testimonials.map((testimonial) => (
-              <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
-                <Card className="border-none shadow-md">
-                  <CardContent className="p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex gap-0.5">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-5 w-5 fill-primary text-primary"
-                          />
-                        ))}
+        <div className="max-w-4xl mx-auto">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {testimonials.map((testimonial) => (
+                <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="border-none shadow-md">
+                    <CardContent className="p-6">
+                      <div className="mb-4 flex items-center justify-between">
+                        <div className="flex gap-0.5">
+                          {[...Array(testimonial.rating)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className="h-5 w-5 fill-primary text-primary"
+                            />
+                          ))}
+                        </div>
+                        {testimonial.verified && (
+                          <Badge variant="secondary" className="ml-2">
+                            Verified Patient
+                          </Badge>
+                        )}
                       </div>
-                      {testimonial.verified && (
-                        <Badge variant="secondary" className="ml-2">
-                          Verified Patient
-                        </Badge>
-                      )}
-                    </div>
 
-                    <Quote className="h-8 w-8 text-primary/20 mb-2" />
-                    <p className="text-muted-foreground mb-4">
-                      {testimonial.text}
-                    </p>
-
-                    <div className="mt-4 pt-4 border-t">
-                      <p className="font-semibold">{testimonial.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {testimonial.location}
+                      <Quote className="h-8 w-8 text-primary/20 mb-2" />
+                      <p className="text-muted-foreground mb-4">
+                        {testimonial.text}
                       </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <div className="flex justify-center mt-4">
-            <CarouselPrevious className="relative static translate-y-0 mr-2" />
-            <CarouselNext className="relative static translate-y-0 ml-2" />
-          </div>
-        </Carousel>
+
+                      <div className="mt-4 pt-4 border-t">
+                        <p className="font-semibold">{testimonial.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {testimonial.location}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="flex justify-center mt-4">
+              <CarouselPrevious className="relative static translate-y-0 mr-2" />
+              <CarouselNext className="relative static translate-y-0 ml-2" />
+            </div>
+          </Carousel>
+        </div>
       </div>
     </section>
   );
