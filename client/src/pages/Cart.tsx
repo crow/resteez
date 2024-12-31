@@ -64,8 +64,7 @@ export default function Cart() {
           },
           body: JSON.stringify({
             items: cartItems.map(item => ({
-              quantity: item.quantity,
-              lookupKey: import.meta.env.VITE_RESTEEZ_LOOKUP_KEY
+              quantity: item.quantity
             }))
           })
         });
@@ -104,107 +103,110 @@ export default function Cart() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] overflow-hidden">
+    <div className="min-h-screen flex flex-col">
       {isRedirecting && (
         <LoadingOverlay message="Preparing your checkout..." />
       )}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <Button
-            variant="ghost"
-            className="button-neo"
-            onClick={() => setLocation("/")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
 
-          <h1 className="text-3xl font-bold">Shopping Cart</h1>
+      <div className="flex-1 container mx-auto px-4 py-6 pb-32">
+        <Button
+          variant="ghost"
+          className="button-neo mb-6"
+          onClick={() => setLocation("/")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
+        </Button>
 
-          {cartItems.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">Your cart is empty</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <div className="space-y-4">
-                {cartItems.map((item) => (
-                  <Card key={item.id}>
-                    <CardContent className="flex items-center gap-4 p-4">
-                      <div className="w-24 h-24 relative flex-shrink-0">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="absolute inset-0 w-full h-full object-contain"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{item.name}</h3>
-                        <p className="text-muted-foreground">
-                          ${item.price.toFixed(2)} each
-                        </p>
-                        <p className="font-medium">
-                          Subtotal: ${(item.price * item.quantity).toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.id, -1)}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          className="w-16 text-center"
-                          readOnly
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.id, 1)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+        <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
 
-              <Card className="sticky bottom-0 mt-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <CardContent className="p-4">
-                  <div className="flex justify-between text-lg font-semibold">
-                    <span>Total</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
+        {cartItems.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">Your cart is empty</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {cartItems.map((item) => (
+              <Card key={item.id}>
+                <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4">
+                  <div className="w-20 h-20 relative flex-shrink-0">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h3 className="font-semibold truncate">{item.name}</h3>
+                    <p className="text-muted-foreground">
+                      ${item.price.toFixed(2)} each
+                    </p>
+                    <p className="font-medium">
+                      Subtotal: ${(item.price * item.quantity).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateQuantity(item.id, -1)}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      className="w-16 text-center"
+                      readOnly
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateQuantity(item.id, 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => removeItem(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
-                <CardFooter className="p-4">
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={() => checkout.mutate()}
-                    disabled={cartItems.length === 0 || checkout.isPending || isRedirecting}
-                  >
-                    {checkout.isPending || isRedirecting ? "Processing..." : "Proceed to Checkout"}
-                  </Button>
-                </CardFooter>
               </Card>
-            </>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {cartItems.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border">
+          <div className="container mx-auto px-4">
+            <Card className="mx-auto max-w-4xl border-0 bg-transparent shadow-none">
+              <CardContent className="p-4">
+                <div className="flex justify-between text-lg font-semibold">
+                  <span>Total</span>
+                  <span>${calculateTotal().toFixed(2)}</span>
+                </div>
+              </CardContent>
+              <CardFooter className="p-4">
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={() => checkout.mutate()}
+                  disabled={cartItems.length === 0 || checkout.isPending || isRedirecting}
+                >
+                  {checkout.isPending || isRedirecting ? "Processing..." : "Proceed to Checkout"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

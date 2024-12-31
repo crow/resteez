@@ -87,7 +87,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Update the order creation endpoint to use fixed price
+  // Create order with fixed price
   app.post("/api/orders", async (req, res) => {
     try {
       const { items } = req.body;
@@ -141,11 +141,6 @@ export function registerRoutes(app: Express): Server {
         },
       });
 
-      console.log('Created checkout session:', { 
-        sessionId: session.id, 
-        url: session.url 
-      });
-
       res.json({
         url: session.url,
         sessionId: session.id,
@@ -156,7 +151,6 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({
         error: "Failed to create checkout session",
         message: error instanceof Error ? error.message : "Unknown error",
-        details: process.env.NODE_ENV === 'development' ? error : undefined
       });
     }
   });
