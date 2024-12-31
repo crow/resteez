@@ -14,6 +14,7 @@ interface CartItem {
   name: string;
   quantity: number;
   image: string;
+  price: number;
 }
 
 export default function Cart() {
@@ -25,7 +26,8 @@ export default function Cart() {
       id: 1,
       name: PRODUCT_DATA.name,
       quantity: 1,
-      image: PRODUCT_DATA.images[0]
+      image: PRODUCT_DATA.images[0],
+      price: PRODUCT_DATA.price
     }
   ]);
 
@@ -45,6 +47,10 @@ export default function Cart() {
       title: "Item removed",
       description: "The item has been removed from your cart."
     });
+  };
+
+  const calculateTotal = () => {
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
   const checkout = useMutation({
@@ -137,7 +143,10 @@ export default function Cart() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold truncate">{item.name}</h3>
                         <p className="text-muted-foreground">
-                          Price will be calculated at checkout
+                          ${item.price.toFixed(2)} each
+                        </p>
+                        <p className="font-medium">
+                          Subtotal: ${(item.price * item.quantity).toFixed(2)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
@@ -178,7 +187,7 @@ export default function Cart() {
                 <CardContent className="p-4">
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total</span>
-                    <span>Calculated at checkout</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
                   </div>
                 </CardContent>
                 <CardFooter className="p-4">

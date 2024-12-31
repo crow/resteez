@@ -13,23 +13,6 @@ export const PRODUCT_DATA = {
     "/attached_assets/image_1735506036548.png",
     "/attached_assets/image_1735506140564.png",
   ],
-  testimonials: [
-    {
-      name: "Sarah J.",
-      text: "Finally found relief after years of RLS symptoms. I used to pray for death but now find myself earnestly engaged in my day to day life.",
-      rating: 4,
-    },
-    {
-      name: "Michael R.",
-      text: "This device has dramatically improved my sleep quality.",
-      rating: 5,
-    },
-    {
-      name: "Cynthia M.",
-      text: "I love this thing.",
-      rating: 5,
-    },
-  ],
 };
 
 export const STOCK_PHOTOS = {
