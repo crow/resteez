@@ -12,10 +12,6 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY must be set");
 }
 
-if (!process.env.RESTEEZ_LOOKUP_KEY) {
-  throw new Error("RESTEEZ_LOOKUP_KEY must be set");
-}
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-10-16",
   typescript: true,
@@ -91,7 +87,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Update the order creation endpoint
+  // Update the order creation endpoint to use fixed price
   app.post("/api/orders", async (req, res) => {
     try {
       const { items } = req.body;
@@ -100,52 +96,39 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Invalid items array" });
       }
 
-      console.log('Creating order with lookup key:', process.env.RESTEEZ_LOOKUP_KEY);
-
-      // Fetch price using lookup key
-      const prices = await stripe.prices.search({
-        query: `active:'true' AND lookup_key:'${process.env.RESTEEZ_LOOKUP_KEY}'`,
-      });
-
-      console.log('Found prices:', prices.data.length);
-
-      if (!prices.data.length) {
-        console.error('No price found for lookup key:', process.env.RESTEEZ_LOOKUP_KEY);
-        return res.status(404).json({ error: "Price not found for the given lookup key" });
-      }
-
-      const price = prices.data[0];
-      console.log('Selected price:', { id: price.id, unit_amount: price.unit_amount });
-
-      const product = await stripe.products.retrieve(price.product as string);
-      console.log('Retrieved product:', { id: product.id, name: product.name });
-
-      // Create pending order
+      // Create pending order with fixed price
       const [order] = await db
         .insert(orders)
         .values({
           status: "pending",
-          total: ((price.unit_amount || 0) * items[0].quantity / 100).toString(),
+          total: (19.99 * items[0].quantity).toString(),
         })
         .returning();
 
       // Create order items
       await db.insert(orderItems).values({
         orderId: order.id,
-        productId: 1, // Assuming this is the RestEaze product ID
+        productId: 1, // RestEaze product ID
         quantity: items[0].quantity,
-        price: ((price.unit_amount || 0) / 100).toString(),
+        price: "19.99", // Fixed price
       });
 
       // Get the base URL for the application
       const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-      // Create Stripe checkout session with the lookup key
+      // Create Stripe checkout session with fixed price
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "payment",
         line_items: [{
-          price: price.id,
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'RestEaze RLS Relief Band',
+              description: 'Relief band for Restless Legs Syndrome',
+            },
+            unit_amount: 1999, // $19.99 in cents
+          },
           quantity: items[0].quantity,
         }],
         success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,

@@ -51,7 +51,6 @@ export async function createPaymentIntent(data: PaymentIntentRequest) {
         items: [
           {
             quantity: data.quantity,
-            lookupKey: process.env.RESTEEZ_LOOKUP_KEY,
           },
         ],
       }),
