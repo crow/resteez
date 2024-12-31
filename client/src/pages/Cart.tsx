@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { PRODUCT_DATA } from "@/lib/constants";
 import { useMutation } from "@tanstack/react-query";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { createPaymentIntent } from "@/lib/stripe";
 
 interface CartItem {
   id: number;
@@ -56,7 +55,25 @@ export default function Cart() {
     mutationFn: async () => {
       try {
         setIsRedirecting(true);
-        await createPaymentIntent({ quantity: cartItems[0].quantity });
+
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            items: [{
+              quantity: cartItems[0].quantity
+            }]
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create order");
+        }
+
+        const data = await response.json();
+        window.location.href = data.url;
       } catch (error) {
         setIsRedirecting(false);
         throw error;
@@ -66,9 +83,7 @@ export default function Cart() {
       setIsRedirecting(false);
       toast({
         title: "Checkout failed",
-        description: error instanceof Error
-          ? error.message
-          : "An unexpected error occurred. Please try again.",
+        description: "Failed to process checkout. Please try again.",
         variant: "destructive"
       });
     }

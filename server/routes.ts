@@ -12,10 +12,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY must be set");
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
-  typescript: true,
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -145,101 +142,13 @@ export function registerRoutes(app: Express): Server {
         },
       });
 
-      res.json({
-        url: session.url,
-        sessionId: session.id,
-        orderId: order.id,
-      });
+      res.json({ url: session.url });
     } catch (error) {
-      console.error("Checkout error:", error);
       res.status(500).json({
-        error: "Failed to create checkout session",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Failed to create checkout session"
       });
     }
   });
-
-  // Check payment status
-  app.get("/api/orders/:orderId/check-payment", async (req, res) => {
-    try {
-      const { orderId } = req.params;
-      const { sessionId } = req.query;
-
-      if (!sessionId || typeof sessionId !== "string") {
-        return res.status(400).json({ error: "Session ID is required" });
-      }
-
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-      if (session.payment_status === "paid") {
-        // Update order status and add shipping details
-        await db
-          .update(orders)
-          .set({
-            status: "confirmed",
-            customerEmail: session.customer_details?.email,
-            shippingAddress: session.shipping_details,
-          })
-          .where(eq(orders.id, parseInt(orderId)));
-
-        return res.json({ status: "confirmed" });
-      }
-
-      res.json({ status: session.payment_status });
-    } catch (error) {
-      console.error("Payment check error:", error);
-      res.status(500).json({
-        error: "Failed to check payment status",
-      });
-    }
-  });
-
-  // Webhook handler for Stripe events
-  app.post(
-    "/api/webhooks/stripe",
-    express.raw({ type: "application/json" }),
-    async (req, res) => {
-      const sig = req.headers["stripe-signature"];
-      let event;
-
-      try {
-        event = stripe.webhooks.constructEvent(
-          req.body,
-          sig || "",
-          process.env.STRIPE_WEBHOOK_SECRET || "",
-        );
-      } catch (err) {
-        return res.status(400).send("Webhook signature verification failed");
-      }
-
-      // Handle checkout.session.completed
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object;
-
-        try {
-          const orderId = session.metadata?.orderId;
-          if (!orderId) {
-            throw new Error("No order ID in metadata");
-          }
-
-          await db
-            .update(orders)
-            .set({
-              status: "confirmed",
-              customerEmail: session.customer_details?.email,
-              shippingAddress: session.shipping_details,
-            })
-            .where(eq(orders.id, parseInt(orderId)));
-
-        } catch (error) {
-          console.error("Error processing webhook:", error);
-          return res.status(500).send("Error processing webhook");
-        }
-      }
-
-      res.json({ received: true });
-    },
-  );
 
   // Register error handling middleware last
   app.use(errorHandler);
