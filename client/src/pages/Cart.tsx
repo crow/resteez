@@ -51,7 +51,6 @@ export default function Cart() {
     mutationFn: async () => {
       try {
         setIsRedirecting(true);
-        // Create order using lookup key
         const response = await fetch("/api/orders", {
           method: "POST",
           headers: {
@@ -78,7 +77,6 @@ export default function Cart() {
           throw new Error("No checkout URL returned from server");
         }
 
-        // Redirect to Stripe checkout
         window.location.href = data.url;
       } catch (error) {
         setIsRedirecting(false);
@@ -100,101 +98,103 @@ export default function Cart() {
   });
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-y-auto">
+    <div className="flex flex-col h-[calc(100vh-5rem)] overflow-hidden">
       {isRedirecting && (
         <LoadingOverlay message="Preparing your checkout..." />
       )}
-      <div className="max-w-4xl mx-auto space-y-8 p-4">
-        <Button
-          variant="ghost"
-          className="button-neo mb-8"
-          onClick={() => setLocation("/")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Button>
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Button
+            variant="ghost"
+            className="button-neo"
+            onClick={() => setLocation("/")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
 
-        <h1 className="text-3xl font-bold">Shopping Cart</h1>
+          <h1 className="text-3xl font-bold">Shopping Cart</h1>
 
-        {cartItems.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground">Your cart is empty</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <div className="space-y-4">
-              {cartItems.map((item) => (
-                <Card key={item.id}>
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <div className="w-24 h-24 relative">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="absolute inset-0 w-full h-full object-contain"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{item.name}</h3>
-                      <p className="text-muted-foreground">
-                        Price will be calculated at checkout
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, -1)}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        className="w-16 text-center"
-                        readOnly
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, 1)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
+          {cartItems.length === 0 ? (
             <Card>
-              <CardContent className="p-4">
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>Calculated at checkout</span>
-                </div>
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">Your cart is empty</p>
               </CardContent>
-              <CardFooter className="p-4">
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={() => checkout.mutate()}
-                  disabled={cartItems.length === 0 || checkout.isPending || isRedirecting}
-                >
-                  {checkout.isPending || isRedirecting ? "Processing..." : "Proceed to Checkout"}
-                </Button>
-              </CardFooter>
             </Card>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <Card key={item.id}>
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <div className="w-24 h-24 relative flex-shrink-0">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="absolute inset-0 w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold truncate">{item.name}</h3>
+                        <p className="text-muted-foreground">
+                          Price will be calculated at checkout
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateQuantity(item.id, -1)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          className="w-16 text-center"
+                          readOnly
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateQuantity(item.id, 1)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeItem(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="sticky bottom-0 mt-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <CardContent className="p-4">
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Total</span>
+                    <span>Calculated at checkout</span>
+                  </div>
+                </CardContent>
+                <CardFooter className="p-4">
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => checkout.mutate()}
+                    disabled={cartItems.length === 0 || checkout.isPending || isRedirecting}
+                  >
+                    {checkout.isPending || isRedirecting ? "Processing..." : "Proceed to Checkout"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
